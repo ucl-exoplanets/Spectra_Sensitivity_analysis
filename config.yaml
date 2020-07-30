@@ -1,0 +1,38 @@
+---
+general:
+  numClass: 2
+  displayNet: true
+
+training:
+  useCNN: true
+  useMLP: false
+  useLSTM: false
+  decay: 0
+  dropRate: 0.1
+  lossFn: "mse"
+  extraInput: false
+  shuffleTimes: 5
+
+
+CNN:
+  layers: [ 32,64,128]
+  kernels: [5,5,5]
+  activation: "relu"
+  stride: [1,1,1]
+  batchNorm: [1,1,1]
+  maxPool: [1,1,1]
+  denseUnit: 128
+  denseActi: "leakyRELU"
+
+MLP:
+  layers: [ 320,240,160,80]
+  activation: "relu"
+
+LSTM:
+  layers: [200,200]
+  denseUnit: 16
+  lstmActi: 'tanh'
+  maxPool: [1,1]
+
+
+
