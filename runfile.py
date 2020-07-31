@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import utils
 import plotting
+import ops
 
 with open('config.yaml') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
@@ -25,6 +26,7 @@ trainable_param[:, -1] = np.log10(trainable_param[:, -1])
 train_test_idx = utils.get_random_idx(spectrum, portion=0.8)
 x_train_set, y_train_set = spectrum_file[train_test_idx], trainable_param[train_test_idx]
 x_test, y_test = spectrum[~train_test_idx], trainable_param[~train_test_idx]
+x_test_sensi = spectrum_file[~train_test_idx]
 
 # Extract training global mean and std values
 spectrum_mean = x_train_set[:, 0, :].mean()
@@ -71,7 +73,7 @@ model = Network(
 #                   cv_order=0)
 
 # todo after training analysis.
-model.load_model(checkpoint_dir+'ckt/checkpt_0.h5')
+demo_model = model.load_model(checkpoint_dir+'ckt/checkpt_0.h5')
 training_loss, valid_loss = utils.load_history(checkpoint_dir)
 plotting.return_history(training_loss, valid_loss, checkpoint_dir)
 
@@ -81,3 +83,17 @@ model.produce_result(std_x_test, std_y_test, param_mean,
 std_y_pred = model.predict_result(std_x_test)
 MSE_score = utils.compute_MSE(std_y_test, std_y_pred)
 MSE_score.to_csv(checkpoint_dir+"MSE.csv", index=False)
+
+# Sensitivity analysis
+ops.compute_sensitivty_org(model=demo_model,
+                           y_test=std_y_test,
+                           org_spectrum=x_test,
+                           org_error=x_test_sensi[:, 1, :],
+                           y_data_mean=param_mean,
+                           y_data_std=param_std,
+                           gases=None,
+                           no_spectra=5,
+                           repeat=10,
+                           x_mean=spectrum_mean,
+                           x_std=spectrum_std,
+                           abundance=[-7, -3, ])

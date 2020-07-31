@@ -4,7 +4,6 @@ import numpy as np
 import os
 import pandas as pd
 import glob
-from models.ops import *
 from constants import M_J, R_J, label, units
 
 
