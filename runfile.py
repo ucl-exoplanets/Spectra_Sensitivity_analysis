@@ -77,3 +77,7 @@ plotting.return_history(training_loss, valid_loss, checkpoint_dir)
 
 model.produce_result(std_x_test, std_y_test, param_mean,
                      param_std, checkpoint_dir)
+
+std_y_pred = model.predict_result(std_x_test)
+MSE_score = utils.compute_MSE(std_y_test, std_y_pred)
+MSE_score.to_csv(checkpoint_dir+"MSE.csv", index=False)

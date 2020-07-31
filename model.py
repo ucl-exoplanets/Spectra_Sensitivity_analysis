@@ -40,6 +40,7 @@ class Network():
         os.makedirs(os.path.join(checkpoint_dir, 'history'), exist_ok=True)
         os.makedirs(os.path.join(checkpoint_dir, 'ckt'), exist_ok=True)
 
+        # callbacks
         # initialise log file.
         csv_logger = CSVLogger(os.path.join(
             checkpoint_dir, 'history/training_{}.log'.format(cv_order)))
@@ -64,15 +65,15 @@ class Network():
         X_valid = X_valid.reshape(-1, self.spectrum_length, 1)
 
         # trainings
-        history = self.model.fit(X_train, y_train,
-                                 batch_size=batch_size,
-                                 epochs=epochs,
-                                 verbose=1,
-                                 validation_data=(X_valid, y_valid),
-                                 shuffle=True,
-                                 callbacks=callbacks)
+        self.model.fit(X_train, y_train,
+                       batch_size=batch_size,
+                       epochs=epochs,
+                       verbose=1,
+                       validation_data=(X_valid, y_valid),
+                       shuffle=True,
+                       callbacks=callbacks)
         score = self.model.evaluate(X_valid, y_valid, verbose=0)
-        return history
+        return self.model
 
     def load_model(self, checkpoint_dir_path):
         self.model = load_model(checkpoint_dir_path)

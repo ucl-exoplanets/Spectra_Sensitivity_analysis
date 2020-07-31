@@ -1,6 +1,7 @@
 import numpy as np
 import glob
 import pandas as pd
+from constants import label
 
 
 def get_random_idx(array, portion=0.7, seed=42):
@@ -20,6 +21,17 @@ def random_index(data):
     index = np.arange(len(data))
     np.random.shuffle(index)
     return index
+
+
+def compute_MSE(y_true, y_pred, gas_label=None):
+    MSE = np.mean(np.square(y_true-y_pred), axis=0)
+    length = len(MSE)
+    MSE = MSE.reshape(1, -1)
+    if gas_label is None:
+        gas_label = label
+    df = pd.DataFrame(MSE, columns=label[:length])
+    df['Mean MSE'] = np.mean(np.square(y_true-y_pred))
+    return df
 
 
 def shuffle_spectrum(spectrum, error, times=10):
