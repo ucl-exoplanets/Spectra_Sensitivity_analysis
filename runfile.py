@@ -25,13 +25,13 @@ trainable_param[:, -1] = np.log10(trainable_param[:, -1])
 
 # train test split
 train_test_idx = utils.get_random_idx(spectrum, portion=0.8)
-x_train_set, y_train_set = spectrum_file[train_test_idx], trainable_param[train_test_idx]
-x_test_set, y_test = spectrum_file[~train_test_idx], trainable_param[~train_test_idx]
-x_test = spectrum[~train_test_idx]
+x_train_set, y_train_set = spectrum[train_test_idx], trainable_param[train_test_idx]
+x_test, y_test = spectrum[~train_test_idx], trainable_param[~train_test_idx]
+error_train_set, error_test = error[train_test_idx], error[~train_test_idx]
 
 # Extract training global mean and std values
-spectrum_mean = x_train_set[:, 0, :].mean()
-spectrum_std = x_train_set[:, 0, :].std()
+spectrum_mean = x_train_set.mean()
+spectrum_std = x_train_set.std()
 std_x_test = utils.standardise(x_test, spectrum_mean, spectrum_std)
 
 # standardise AMPs
@@ -44,16 +44,17 @@ std_y_test = utils.standardise(y_test, param_mean, param_std)
 train_valid_idx = utils.get_random_idx(x_train_set, portion=0.8)
 x_org_train, y_train = x_train_set[train_valid_idx], std_y_train_set[train_valid_idx]
 x_org_valid, y_valid = x_train_set[~train_valid_idx], std_y_train_set[~train_valid_idx]
+error_train, error_valid = error_train_set[train_valid_idx], error_train_set[~train_valid_idx]
 
 # augment train and validation data
-std_x_aug_train, std_y_aug_train = utils.augment_data(spectrum=x_org_train[:, 0, :],
-                                                      error=x_org_train[:, 1, :],
+std_x_aug_train, std_y_aug_train = utils.augment_data(spectrum=x_org_train,
+                                                      error=error_train,
                                                       param=y_train,
                                                       times=config['training']['shuffleTimes'],
                                                       spectrum_mean=spectrum_mean, spectrum_std=spectrum_std)
 
-std_x_aug_valid, std_y_aug_valid = utils.augment_data(spectrum=x_org_valid[:, 0, :],
-                                                      error=x_org_valid[:, 1, :],
+std_x_aug_valid, std_y_aug_valid = utils.augment_data(spectrum=x_org_valid,
+                                                      error=error_valid,
                                                       param=y_valid,
                                                       times=config['training']['shuffleTimes'],
                                                       spectrum_mean=spectrum_mean, spectrum_std=spectrum_std)
@@ -87,7 +88,7 @@ MSE_score.to_csv(checkpoint_dir+"MSE.csv", index=False)
 sensitivity_MSE = ops.compute_sensitivty_org(model=demo_model,
                                              y_test=std_y_test,
                                              org_spectrum=x_test,
-                                             org_error=x_test_set[:, 1, :],
+                                             org_error=error_test,
                                              y_data_mean=param_mean,
                                              y_data_std=param_std,
                                              gases=None,
