@@ -98,144 +98,45 @@ def plot_compare_truth(y_test_org, y_predict_org, checkpoint_dir, order=0,
     plt.close()
 
 
-def plot_sensitivity(full_spectrum, mean_std, checkpoint_dir, order=0,
-                     chosen_gas=None, name='sensi_map', abundance=[-4, -3]):
+def plot_sensitivity(wl, spectrum, mean_std, checkpoint_dir, order=0,
+                     gases=None, name='sensi_map'):
     gas_contri = np.load("./data/all_gas_contri.npy")
-    Jup_radius = 69911000
     gas_id = {'H2O': 0, 'CH4': 1, 'CO': 2, 'CO2': 3, 'NH3': 4}
-    for idx, gas in enumerate(chosen_gas):
+    if gases is None:
+        gases = label
+    for idx, gas in enumerate(gases):
         plt.figure(figsize=(10, 8))
         if gas in ['H2O', 'CH4', 'CO', 'CO2', 'NH3']:
             ax1 = plt.subplot(2, 1, 1)
         else:
             ax1 = plt.subplot(1, 1, 1)
         if gas == 'Rp':
-            mean_std[idx] = mean_std[idx]/Jup_radius
+            mean_std[idx] = mean_std[idx]/R_J
         q = np.quantile(mean_std[idx], 0.9)
 
-        plt.scatter(full_spectrum[0, 2, :],
-                    full_spectrum[0, 0, :], c=mean_std[idx], vmax=q)
-        plt.plot(full_spectrum[0, 2, :], full_spectrum[0, 0, :])
+        plt.scatter(wl, spectrum, c=mean_std[idx], vmax=q)
+        plt.plot(wl, spectrum)
         plt.xscale('log')
         plt.xticks([1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
-        plt.xlim([full_spectrum[0, 2, :].min()*0.9,
-                  full_spectrum[0, 2, :].max()*1.05])
-        plt.ylim([full_spectrum[0, 0, :].min()*0.95,
-                  full_spectrum[0, 0, :].max()*1.05])
+        plt.xlim([wl.min()*0.9, wl.max()*1.05])
+        plt.ylim([spectrum.min()*0.95, spectrum.max()*1.05])
         plt.colorbar(orientation='horizontal')
         plt.title(
-            f'Average {name} for {gas} (logX = [{abundance[0]},{abundance[1]}]) (Spectrum view)')
+            f'Average {name} for {gas} (Spectrum view)')
         if gas in ['H2O', 'CH4', 'CO', 'CO2', 'NH3']:
             ax2 = plt.subplot(2, 1, 2, sharex=ax1)
             plt.scatter(
-                full_spectrum[0, 2, :], gas_contri[gas_id[gas]], marker='o', c=mean_std[idx], vmax=q)
-            plt.plot(full_spectrum[0, 2, :], gas_contri[gas_id[gas]])
+                wl, gas_contri[gas_id[gas]], marker='o', c=mean_std[idx], vmax=q)
+            plt.plot(wl, gas_contri[gas_id[gas]])
             plt.xscale('log')
             plt.ylim([gas_contri[gas_id[gas]].min()*0.95,
                       gas_contri[gas_id[gas]].max()*1.05])
-            plt.xlim([full_spectrum[0, 2, :].min() * 0.9,
-                      full_spectrum[0, 2, :].max() * 1.05])
+            plt.xlim([wl.min() * 0.9, wl.max() * 1.05])
             plt.xticks([1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
             plt.title(f'Contribution Function for {gas}')
 
-        if not os.path.exists(os.path.join(checkpoint_dir, f'results/logX_{abundance[0]}_{abundance[1]}')):
-            os.makedirs(os.path.join(checkpoint_dir,
-                                     f'results/logX_{abundance[0]}_{abundance[1]}'))
         plt.savefig(os.path.join(
-            checkpoint_dir, f'results/logX_{abundance[0]}_{abundance[1]}/{name}_{gas}_{order}.png'))
-        plt.close()
-
-
-def plot_bias_varience(full_spectrum, total_std, total_mean, checkpoint_dir, order=0,
-                       chosen_gas=None, name='bias_var_', abundance=[-4, -3]):
-    gas_contri = np.load("./data/all_gas_contri.npy")
-    gas_id = {'H2O': 0, 'CH4': 1, 'CO': 2, 'CO2': 3, 'NH3': 4}
-    Jup_radius = 69911000
-    for idx, gas in enumerate(chosen_gas):
-        total_mean = np.abs(total_mean)
-        total_std = np.abs(total_std)
-        if gas == 'Rp':
-            total_mean[idx] = total_mean[idx]/Jup_radius
-            total_std[idx] = total_std[idx] / Jup_radius
-        q_mean = np.quantile(total_mean[idx], 0.9)
-        q_std = np.quantile(total_std[idx], 0.9)
-        plt.figure(figsize=(16, 8))
-        if gas in ['H2O', 'CH4', 'CO', 'CO2', 'NH3']:
-            ax1 = plt.subplot(2, 2, 1)
-        else:
-            ax1 = plt.subplot(2, 1, 1)
-
-        plt.scatter(full_spectrum[0, 2, :], full_spectrum[0,
-                                                          0, :], c=total_mean[idx], vmax=q_mean)
-        plt.plot(full_spectrum[0, 2, :], full_spectrum[0, 0, :])
-        plt.xscale('log')
-        plt.xlim([full_spectrum[0, 2, :].min() * 0.9,
-                  full_spectrum[0, 2, :].max() * 1.05])
-        plt.ylim([full_spectrum[0, 0, :].min() * 0.95,
-                  full_spectrum[0, 0, :].max() * 1.05])
-        plt.title(
-            f'MAE (top) and Variance (bottom) for {gas} (logX = [{abundance[0]},{abundance[1]}])(Spectrum View)')
-        plt.yticks([], [])
-        if gas in ['H2O', 'CH4', 'CO', 'CO2', 'NH3']:
-            pass
-        else:
-            plt.colorbar(orientation='vertical', shrink=0.9, pad=0.02)
-
-        if gas in ['H2O', 'CH4', 'CO', 'CO2', 'NH3']:
-            ax3 = plt.subplot(2, 2, 3, sharex=ax1)
-        else:
-            ax3 = plt.subplot(2, 1, 2, sharex=ax1)
-
-        plt.scatter(
-            full_spectrum[0, 2, :], full_spectrum[0, 0, :], c=total_std[idx], vmax=q_std)
-        plt.plot(full_spectrum[0, 2, :], full_spectrum[0, 0, :])
-        plt.xscale('log')
-        plt.xticks([1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
-        plt.xlim([full_spectrum[0, 2, :].min() * 0.9,
-                  full_spectrum[0, 2, :].max() * 1.05])
-        plt.ylim([full_spectrum[0, 0, :].min() * 0.95,
-                  full_spectrum[0, 0, :].max() * 1.05])
-        plt.yticks([], [])
-
-        if gas in ['H2O', 'CH4', 'CO', 'CO2', 'NH3']:
-            pass
-        else:
-            plt.colorbar(orientation='vertical', shrink=0.9, pad=0.02)
-
-        if gas in ['H2O', 'CH4', 'CO', 'CO2', 'NH3']:
-            ax2 = plt.subplot(2, 2, 2, sharex=ax1)
-            plt.colorbar(orientation='vertical', shrink=0.9, pad=0.02)
-            plt.scatter(full_spectrum[0, 2, :], gas_contri[gas_id[gas]],
-                        marker='o', c=total_mean[idx], vmax=q_mean)
-            plt.plot(full_spectrum[0, 2, :], gas_contri[gas_id[gas]])
-            plt.xscale('log')
-            plt.ylim([gas_contri[gas_id[gas]].min() * 0.95,
-                      gas_contri[gas_id[gas]].max() * 1.05])
-            plt.xlim([full_spectrum[0, 2, :].min() * 0.9,
-                      full_spectrum[0, 2, :].max() * 1.05])
-            plt.title(
-                f'Bias (top) and Variance (bottom) for {gas} (Contribution View)')
-            plt.yticks([], [])
-
-            ax4 = plt.subplot(2, 2, 4, sharex=ax1)
-            plt.colorbar(orientation='vertical', shrink=0.9, pad=0.02)
-            plt.scatter(full_spectrum[0, 2, :], gas_contri[gas_id[gas]],
-                        marker='o', c=total_std[idx], vmax=q_std)
-            plt.plot(full_spectrum[0, 2, :], gas_contri[gas_id[gas]])
-            plt.xscale('log')
-            plt.ylim([gas_contri[gas_id[gas]].min() * 0.95,
-                      gas_contri[gas_id[gas]].max() * 1.05])
-            plt.xlim([full_spectrum[0, 2, :].min() * 0.9,
-                      full_spectrum[0, 2, :].max() * 1.05])
-            plt.xticks([1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
-            plt.yticks([], [])
-        if not os.path.exists(os.path.join(checkpoint_dir, f'results/logX_{abundance[0]}_{abundance[1]}')):
-            os.makedirs(os.path.join(checkpoint_dir,
-                                     f'results/logX_{abundance[0]}_{abundance[1]}'))
-        plt.savefig(os.path.join(
-            checkpoint_dir, f'results/logX_{abundance[0]}_{abundance[1]}/{name}_{gas}_{order}.png'))
-        plt.subplots_adjust(wspace=0, hspace=0.02)
-
+            checkpoint_dir, f'results/{name}_{gas}_{order}.png'))
         plt.close()
 
 
@@ -255,3 +156,57 @@ def return_history(training_loss, valid_loss, checkpoint_dir):
     plt.legend()
     plt.savefig(os.path.join(checkpoint_dir, "progress_plot"))
     plt.close()
+
+
+def sensitivity_plot(mean_MSE, wl, spectrum, checkpoint_dir, name="map"):
+
+    fig = plt.figure(figsize=(17, 13))
+    gas_contri = np.load("./data/all_gas_contri.npy")
+
+    plt.subplot(1, 2, 1)
+    color = ['black', 'black', 'black', 'black', 'black']
+    name = ['H$_2$O', 'CH$_4$', 'CO', 'CO$_2$', 'NH$_3$']
+    offset = [0, 0.001, 0.0015, 0.0015, 0.0015]
+    t_offset = [0, 0.001, 0.0015, 0.0015, 0.0015]
+    for i in range(5):
+        plt.text(x=0.6, y=0.0049+t_offset[i]*i,
+                 s=name[i], color=color[i], fontsize=16)
+        q = np.quantile(mean_MSE[i], 0.95)
+        plt.plot(wl, gas_contri[i]+(offset[i]*i),
+                 c=color[i], label=name[i], alpha=0.5, zorder=1)
+        ax = plt.scatter(wl, gas_contri[i]+(offset[i]*i),
+                         marker='o', c=mean_MSE[i], vmax=q, zorder=99)
+        plt.xscale('log')
+        plt.xticks([1, 2, 3, 4, 5, 6, 7, 8], [
+                   1, 2, 3, 4, 5, 6, 7, 8], fontsize=12)
+        plt.xlabel('Wavelength ($\mu m$)', fontsize=16)
+        plt.yticks([])
+
+    plt.subplot(1, 2, 2)
+    color = ['black', 'black', 'black', 'black']
+    name = ['M$_p$', 'R$_p$', 'T$_p$', 'Cloud']
+    offset = 0.002
+    for idx, i in enumerate(range(5, 9)):
+        plt.text(x=0.6, y=0.0037+offset*idx,
+                 s=name[idx], color=color[idx], fontsize=16)
+        q = np.quantile(mean_MSE[i], 0.95)
+        lq = np.quantile(mean_MSE[i], 0.0)
+        plt.plot(wl, spectrum+(offset*idx),
+                 c=color[idx], label=name[idx], alpha=0.5, zorder=1)
+        ax = plt.scatter(wl, spectrum+(offset*idx), marker='o',
+                         c=mean_MSE[i], vmax=q, zorder=99)
+    plt.xscale('log')
+    plt.xticks([1, 2, 3, 4, 5, 6, 7, 8], [1, 2, 3, 4, 5, 6, 7, 8], fontsize=12)
+    plt.xlabel('Wavelength ($\mu m$)', fontsize=16)
+    plt.yticks([])
+    plt.subplots_adjust(left=0.125,  # the left side of the subplots of the figure
+                        right=0.9,
+                        bottom=0.1,
+                        top=0.87,
+                        wspace=0.1,
+                        hspace=0.18, )
+    cbar_ax = fig.add_axes([0.165, 0.92, 0.7, 0.03])
+    cbar = fig.colorbar(ax, cax=cbar_ax, ticks=[
+                        lq, q], orientation='horizontal')
+    cbar.ax.set_xticklabels(['Least Sensitive', 'Most Sensitive'], fontsize=13)
+    plt.savefig(checkpoint_dir + f"{name}.png")

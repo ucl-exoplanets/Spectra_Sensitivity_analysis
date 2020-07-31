@@ -17,8 +17,9 @@ param_file = pd.read_csv("data/Massive_ariel/low_X/lowX_param_file.csv")
 trainable_param = param_file.values[:, :9]
 spectrum = spectrum_file[:, 0, :]
 error = spectrum_file[:, 1, :]
+wl = spectrum_file[0, 2, :]
 
-# Molecules, Mp and clouds must be in log- scale
+# Molecules, Mp and clouds must be in log-scale
 trainable_param[:, :6] = np.log10(trainable_param[:, :6])
 trainable_param[:, -1] = np.log10(trainable_param[:, -1])
 
@@ -85,15 +86,21 @@ MSE_score = utils.compute_MSE(std_y_test, std_y_pred)
 MSE_score.to_csv(checkpoint_dir+"MSE.csv", index=False)
 
 # Sensitivity analysis
-ops.compute_sensitivty_org(model=demo_model,
-                           y_test=std_y_test,
-                           org_spectrum=x_test,
-                           org_error=x_test_sensi[:, 1, :],
-                           y_data_mean=param_mean,
-                           y_data_std=param_std,
-                           gases=None,
-                           no_spectra=5,
-                           repeat=10,
-                           x_mean=spectrum_mean,
-                           x_std=spectrum_std,
-                           abundance=[-7, -3, ])
+sensitivity_MSE = ops.compute_sensitivty_org(model=demo_model,
+                                             y_test=std_y_test,
+                                             org_spectrum=x_test,
+                                             org_error=x_test_sensi[:, 1, :],
+                                             y_data_mean=param_mean,
+                                             y_data_std=param_std,
+                                             gases=None,
+                                             no_spectra=5,
+                                             repeat=10,
+                                             x_mean=spectrum_mean,
+                                             x_std=spectrum_std,
+                                             abundance=[-7, -3, ])
+
+plotting.sensitivity_plot(spectrum=x_test[0],
+                          wl=wl,
+                          mean_MSE=sensitivity_MSE,
+                          checkpoint_dir=checkpoint_dir,
+                          name='sensi_map')
