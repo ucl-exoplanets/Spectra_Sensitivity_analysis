@@ -46,23 +46,21 @@ x_org_train, y_train = x_train_set[train_valid_idx], std_y_train_set[train_valid
 x_org_valid, y_valid = x_train_set[~train_valid_idx], std_y_train_set[~train_valid_idx]
 
 # augment train and validation data
-shuffle_x_train = utils.shuffle_spectrum(
-    x_org_train[:, 0, :], x_org_train[:, 1, :], times=config['training']['shuffleTimes'])
-std_x_aug_train = utils.standardise(
-    shuffle_x_train, spectrum_mean, spectrum_std)
-std_y_aug_train = np.repeat(
-    y_train, config['training']['shuffleTimes'], axis=0)
+std_x_aug_train, std_y_aug_train = utils.augment_data(spectrum=x_org_train[:, 0, :],
+                                                      error=x_org_train[:, 1, :],
+                                                      param=y_train,
+                                                      times=config['training']['shuffleTimes'],
+                                                      spectrum_mean=spectrum_mean, spectrum_std=spectrum_std)
 
-shuffle_x_valid = utils.shuffle_spectrum(
-    x_org_valid[:, 0, :], x_org_valid[:, 1, :], times=config['training']['shuffleTimes'])
-std_x_aug_valid = utils.standardise(
-    shuffle_x_valid, spectrum_mean, spectrum_std)
-std_y_aug_valid = np.repeat(
-    y_valid, config['training']['shuffleTimes'], axis=0)
+std_x_aug_valid, std_y_aug_valid = utils.augment_data(spectrum=x_org_valid[:, 0, :],
+                                                      error=x_org_valid[:, 1, :],
+                                                      param=y_valid,
+                                                      times=config['training']['shuffleTimes'],
+                                                      spectrum_mean=spectrum_mean, spectrum_std=spectrum_std)
 
 checkpoint_dir = 'output/cnn/test1/'
 model = Network(
-    param_length=std_y_aug_valid.shape[1], spectrum_length=shuffle_x_valid.shape[1], config=config)
+    param_length=trainable_param.shape[1], spectrum_length=spectrum.shape[1], config=config)
 # model.train_model(X_train=std_x_aug_train,
 #                   y_train=std_y_aug_train,
 #                   X_valid=std_x_aug_valid,

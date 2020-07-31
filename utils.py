@@ -45,6 +45,13 @@ def shuffle_spectrum(spectrum, error, times=10):
     return shuffled_batch
 
 
+def augment_data(spectrum, error, param, times, spectrum_mean, spectrum_std):
+    shuffle_x = shuffle_spectrum(spectrum, error, times=times)
+    std_x_aug = standardise(shuffle_x, spectrum_mean, spectrum_std)
+    std_param_aug = np.repeat(param, times, axis=0)
+    return std_x_aug, std_param_aug
+
+
 def load_history(checkpoint_dir):
     print(checkpoint_dir)
     training_log = glob.glob(checkpoint_dir + "history/*.log")
