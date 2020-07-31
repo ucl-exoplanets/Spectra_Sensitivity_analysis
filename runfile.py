@@ -26,15 +26,15 @@ trainable_param[:, -1] = np.log10(trainable_param[:, -1])
 # train test split
 train_test_idx = utils.get_random_idx(spectrum, portion=0.8)
 x_train_set, y_train_set = spectrum_file[train_test_idx], trainable_param[train_test_idx]
-x_test, y_test = spectrum[~train_test_idx], trainable_param[~train_test_idx]
-x_test_sensi = spectrum_file[~train_test_idx]
+x_test_set, y_test = spectrum_file[~train_test_idx], trainable_param[~train_test_idx]
+x_test = spectrum[~train_test_idx]
 
 # Extract training global mean and std values
 spectrum_mean = x_train_set[:, 0, :].mean()
 spectrum_std = x_train_set[:, 0, :].std()
 std_x_test = utils.standardise(x_test, spectrum_mean, spectrum_std)
 
-# standardise output parameters
+# standardise AMPs
 param_mean = y_train_set.mean(axis=0, keepdims=True)
 param_std = y_train_set.std(axis=0, keepdims=True)
 std_y_train_set = utils.standardise(y_train_set, param_mean, param_std)
@@ -87,7 +87,7 @@ MSE_score.to_csv(checkpoint_dir+"MSE.csv", index=False)
 sensitivity_MSE = ops.compute_sensitivty_org(model=demo_model,
                                              y_test=std_y_test,
                                              org_spectrum=x_test,
-                                             org_error=x_test_sensi[:, 1, :],
+                                             org_error=x_test_set[:, 1, :],
                                              y_data_mean=param_mean,
                                              y_data_std=param_std,
                                              gases=None,
