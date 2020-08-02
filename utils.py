@@ -67,3 +67,16 @@ def load_history(checkpoint_dir):
         training_loss[idx] += history_data['loss'][:]
         valid_loss[idx] += history_data['val_loss'][:]
     return training_loss, valid_loss
+
+
+def pre_select(gas, ground_truth, org_spectrum, abundance):
+    if gas in ['H2O', 'CH4', 'CO', 'CO2', 'NH3']:
+            index = (ground_truth.T[idx] > abundance[0]) & (
+                ground_truth.T[idx] < abundance[1])
+            selected_x = org_spectrum[index]
+        elif gas == ['Rp']:
+            index = (ground_truth.T[idx] < 1 * R_J)
+            selected_x = org_spectrum[index]
+        else:
+            selected_x = org_spectrum
+    return selected_x

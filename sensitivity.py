@@ -5,7 +5,7 @@ from constants import R_J, label
 
 
 def compute_sensitivty_org(model, y_test, org_spectrum, org_error, y_data_mean, y_data_std, x_mean, x_std,
-                           gases=None, no_spectra=200, repeat=100,  abundance=[-4, -3]):
+                           gases=None, no_spectra=200, repeat=100,  abundance=[-9, -3]):
 
     # checks
 
@@ -18,15 +18,8 @@ def compute_sensitivty_org(model, y_test, org_spectrum, org_error, y_data_mean, 
     SD_stack = np.zeros((len(gases), no_spectra, repeat, spectrum_length))
     for idx, gas in enumerate(gases):
         # pre selection, currently doing it element by element
-        if gas in ['H2O', 'CH4', 'CO', 'CO2', 'NH3']:
-            index = (ground_truth.T[idx] > abundance[0]) & (
-                ground_truth.T[idx] < abundance[1])
-            selected_x = org_spectrum[index]
-        elif gas == ['Rp']:
-            index = (ground_truth.T[idx] < 1 * R_J)
-            selected_x = org_spectrum[index]
-        else:
-            selected_x = org_spectrum
+        selected_x = utils.pre_select(
+            gas, ground_truth, org_spectrum, abundance)
         # main loop
         for i in range(no_spectra):
             # produce ref prediction for a particular spectrum
