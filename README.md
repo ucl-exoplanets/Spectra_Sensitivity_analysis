@@ -5,14 +5,47 @@ _Work in Progress_
 This is a code repository for the paper: Peeking inside the Black Box: Interpreting Deep Learning Models for Exoplanet Atmospheric Retrievals
 
 ## How to use it
-The implementation provide two ways to use it:
+There are two ways to run the code:
 
-### Model Training
+### Model Training + Sensitivity test
 For those who would like to train a model and use the sensitivity test, you can run the following command in the terminal: 
 
-```python runfile.py```
+```
+python runfile.py
+```
 
-### Sensitivty test
-For those who would like to use the sensitivity functionality only, you may do so by either importing the script 
+### Sensitivty test only
+For those who would like to apply sensitivity test on their own trained model , you may do so by:
+```
+import sensitivity
+test_result = sensitivity.compute_sensitivty_org(
+    model,  
+    y_test,
+    org_spectrum,
+    org_error,
+    y_data_mean,
+    y_data_std,
+    gases,
+    no_spectra,
+    repeat,
+    x_mean,
+    x_std,
+    abundance)
+```
+Description of model arguments:
+
+**model**: Trained keras model, make sure you can use .predict method of the model. If you have trained other models via Tensorflow or PyTorch, you can change the relevant line ( model.predict) to the appropiate equivalent method, as long as it can take in input and output numpy arrays.
+**org_spectrum**: original spectra (without preprocessing such as standardising )from your test set, Shape: (N x wl_bins).
+**org_error**: corresponding error for each wavelength bins (wl_bins) Shape: (N xx wl_bins)
+**x_mean**: Overall mean for spectrum, used for preprocessing purposes. Shape=(1,)
+**x_std**: Overall s.d. for spectrum, used for preprocessing purposes. Shape=(1,)
+
+**y_test**: Ground truth AMPs values, for sorting abundance only ( only used when abundance is not None).
+**y_data_mean**: Overall mean for each AMP, used for preprocessing purposes.  Shape=(number of AMPs)
+**y_data_std**: Overall s.d. for each AMP, used for preprocessing purposes.  Shape=(number of AMPs)
+**gases**: For pre-selection only, if None, it will look for label in constants.py 
+**no_spectra**: Number of example spectra to use (default= 100)
+**repeat**: Number of shuffling for each spectrum (default= 500).
+**abundance**: only include spectra within certain log abundances range , currently it will apply to all the gases. If None, every spectra will be considered.
 
 ## Citation
