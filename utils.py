@@ -1,7 +1,7 @@
 import numpy as np
 import glob
 import pandas as pd
-from constants import label
+from constants import label, R_J
 
 
 def get_random_idx(array, portion=0.7, seed=42):
@@ -71,12 +71,12 @@ def load_history(checkpoint_dir):
 
 def pre_select(gas, ground_truth, org_spectrum, abundance):
     if gas in ['H2O', 'CH4', 'CO', 'CO2', 'NH3']:
-            index = (ground_truth.T[idx] > abundance[0]) & (
-                ground_truth.T[idx] < abundance[1])
-            selected_x = org_spectrum[index]
-        elif gas == ['Rp']:
-            index = (ground_truth.T[idx] < 1 * R_J)
-            selected_x = org_spectrum[index]
-        else:
-            selected_x = org_spectrum
+        index = (ground_truth > abundance[0]) & (
+            ground_truth < abundance[1])
+        selected_x = org_spectrum[index]
+    elif gas == ['Rp']:
+        index = (ground_truth < 1 * R_J)
+        selected_x = org_spectrum[index]
+    else:
+        selected_x = org_spectrum
     return selected_x
