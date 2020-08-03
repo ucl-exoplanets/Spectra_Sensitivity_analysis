@@ -1,8 +1,13 @@
 # Interpreting deep learning models for exoplanet atmospheric retrievals
 _Work in Progress_
 
+
 ## Summary
 This is a code repository for the paper: Peeking inside the Black Box: Interpreting Deep Learning Models for Exoplanet Atmospheric Retrievals
+Inside you will find detailed implementation of the 3 DNNs, and how to carry out sensitivity test for the trained model. You can find the source data file here.
+
+### List of authors
+__Kai Hou Yip, Quentin Changeat, Nikolaos Nikolaou, Mario Morvan, Billy Edwards, Ingo P. Waldmann, Giovanna Tinetti__
 
 ## How to use it
 There are two ways to run the code:
@@ -59,4 +64,8 @@ Description of model arguments:
 **abundance**: only include spectra within certain log abundances range , currently it will apply to all the gases. If None, every spectra will be considered.
 
 The normalisation factors (mean , s.d. ) are needed in order to normalise the shuffled spectrum before going into the model. Readers might need to change the normalisation method if they are using a different preprocessing procedure. 
+
 ## Citation
+If our tool has been useful to your research, please kindly cite us:
+
+## License
