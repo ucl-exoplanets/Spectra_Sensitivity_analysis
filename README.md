@@ -10,7 +10,7 @@ Inside you will find detailed implementation of the 3 DNNs, and how to carry out
 __Kai Hou Yip, Quentin Changeat, Nikolaos Nikolaou, Mario Morvan, Billy Edwards, Ingo P. Waldmann, Giovanna Tinetti__
 
 ## How to use it
-There are two ways to run the code:
+There are two ways to use the code:
 
 ### Model Training + Sensitivity test
 For those who would like to train a model and use the sensitivity test, you can run the following command in the terminal: 
