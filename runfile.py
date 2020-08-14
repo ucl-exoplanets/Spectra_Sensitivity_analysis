@@ -1,11 +1,11 @@
 import yaml
 import numpy as np
 import pandas as pd
-from models.model import Network
-import models.utils as utils
-import models.plotting as plotting
-import models.sensitivity as sensitivity
-import models.ops as ops
+from models import model
+from models.utils import standardise, get_random_idx
+from models.plotting import sensitivity_plot, return_history
+from models.sensitivity import compute_sensitivty_org
+from models.ops import shuffle_spectrum, load_history, compute_MSE, preprocessing
 
 with open('config.yaml') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
@@ -13,88 +13,88 @@ with open('config.yaml') as f:
 # load data
 spectrum_file = np.load("data/Massive_ariel/low_X/lowX_spectra.npy")
 param_file = pd.read_csv("data/Massive_ariel/low_X/lowX_param_file.csv")
+shuffle_times = config['training']['shuffleTimes']
 
-# pre-processing
-spectrum, error, wl, trainable_param = ops.preprocessing(
-    spectrum_file, param_file)
+# Extract data from raw file.
+spectrum, error, wl, trainable_param = preprocessing(spectrum_file, param_file)
 
 # train test split
-train_test_idx = utils.get_random_idx(spectrum, portion=0.8)
-x_train_set, y_train_set = spectrum[train_test_idx], trainable_param[train_test_idx]
-x_test, y_test = spectrum[~train_test_idx], trainable_param[~train_test_idx]
+train_test_idx = get_random_idx(spectrum, portion=0.8)
+x_train_set, x_test = spectrum[train_test_idx], spectrum[~train_test_idx]
+y_train_set, y_test = trainable_param[train_test_idx], trainable_param[~train_test_idx]
 error_train_set, error_test = error[train_test_idx], error[~train_test_idx]
 
-# Extract training global mean and std values
-spectrum_mean = x_train_set.mean()
-spectrum_std = x_train_set.std()
-std_x_test = utils.standardise(x_test, spectrum_mean, spectrum_std)
-
-# standardise AMPs
-param_mean = y_train_set.mean(axis=0, keepdims=True)
-param_std = y_train_set.std(axis=0, keepdims=True)
-std_y_train_set = utils.standardise(y_train_set, param_mean, param_std)
-std_y_test = utils.standardise(y_test, param_mean, param_std)
-
 # train valid split
-train_valid_idx = utils.get_random_idx(x_train_set, portion=0.8)
-x_org_train, y_train = x_train_set[train_valid_idx], std_y_train_set[train_valid_idx]
-x_org_valid, y_valid = x_train_set[~train_valid_idx], std_y_train_set[~train_valid_idx]
+train_valid_idx = get_random_idx(x_train_set, portion=0.8)
+x_org_train, x_org_valid = x_train_set[train_valid_idx], x_train_set[~train_valid_idx]
+y_train, y_valid = y_train_set[train_valid_idx], y_train_set[~train_valid_idx]
 error_train, error_valid = error_train_set[train_valid_idx], error_train_set[~train_valid_idx]
 
-# augment train and validation data
-std_x_aug_train, std_y_aug_train = ops.augment_data(spectrum=x_org_train,
-                                                    error=error_train,
-                                                    param=y_train,
-                                                    times=config['training']['shuffleTimes'],
-                                                    spectrum_mean=spectrum_mean, spectrum_std=spectrum_std)
+# Shuffle spectrum
+aug_x_train = shuffle_spectrum(x_org_train, error_train, times=shuffle_times)
+aug_y_train = np.repeat(y_train, shuffle_times, axis=0)
+aug_x_valid = shuffle_spectrum(x_org_valid, error_valid, times=shuffle_times)
+aug_y_valid = np.repeat(y_valid, shuffle_times, axis=0)
 
-std_x_aug_valid, std_y_aug_valid = ops.augment_data(spectrum=x_org_valid,
-                                                    error=error_valid,
-                                                    param=y_valid,
-                                                    times=config['training']['shuffleTimes'],
-                                                    spectrum_mean=spectrum_mean, spectrum_std=spectrum_std)
+
+# Transform input(spectrum)
+spectrum_mean = x_train_set.mean()
+spectrum_std = x_train_set.std()
+std_aug_x_train = standardise(aug_x_train, spectrum_mean, spectrum_std)
+std_aug_x_valid = standardise(aug_x_valid, spectrum_mean, spectrum_std)
+std_x_test = standardise(x_test, spectrum_mean, spectrum_std)
+
+
+# Transform AMPs
+param_mean = y_train_set.mean(axis=0, keepdims=True)
+param_std = y_train_set.std(axis=0, keepdims=True)
+std_aug_y_train = standardise(aug_y_train, param_mean, param_std)
+std_aug_y_valid = standardise(aug_y_valid, param_mean, param_std)
+std_y_test = standardise(y_test, param_mean, param_std)
 
 checkpoint_dir = 'output/cnn/test1/'
 
-model = Network(
-    param_length=trainable_param.shape[1], spectrum_length=spectrum.shape[1], config=config)
-model.train_model(X_train=std_x_aug_train,
-                  y_train=std_y_aug_train,
-                  X_valid=std_x_aug_valid,
-                  y_valid=std_y_aug_valid,
+model = model.Network(param_length=trainable_param.shape[1],
+                      spectrum_length=spectrum.shape[1],
+                      config=config)
+model.train_model(X_train=std_aug_x_train,
+                  y_train=std_aug_y_train,
+                  X_valid=std_aug_x_valid,
+                  y_valid=std_aug_y_valid,
                   epochs=5,
                   lr=0.001,
                   batch_size=128,
                   checkpoint_dir=checkpoint_dir,
                   cv_order=0)
 
+# load model and evaluate
 demo_model = model.load_model(checkpoint_dir+'ckt/checkpt_0.h5')
-training_loss, valid_loss = ops.load_history(checkpoint_dir)
-plotting.return_history(training_loss, valid_loss, checkpoint_dir)
+training_loss, valid_loss = load_history(checkpoint_dir)
+return_history(training_loss, valid_loss, checkpoint_dir)
 
 model.produce_result(std_x_test, std_y_test, param_mean,
                      param_std, checkpoint_dir)
 
 std_y_pred = model.predict_result(std_x_test)
-MSE_score = ops.compute_MSE(std_y_test, std_y_pred)
+MSE_score = compute_MSE(std_y_test, std_y_pred)
 MSE_score.to_csv(checkpoint_dir+"MSE.csv", index=False)
 
 # Sensitivity analysis
-sensitivity_MSE = sensitivity.compute_sensitivty_org(model=demo_model,
-                                                     ground_truth=std_y_test,
-                                                     org_spectrum=x_test,
-                                                     org_error=error_test,
-                                                     y_data_mean=param_mean,
-                                                     y_data_std=param_std,
-                                                     gases=None,
-                                                     no_spectra=5,
-                                                     repeat=10,
-                                                     x_mean=spectrum_mean,
-                                                     x_std=spectrum_std,
-                                                     abundance=[-7, -3, ])
+sensitivity_MSE = compute_sensitivty_org(model=demo_model,
+                                         ground_truth=std_y_test,
+                                         org_spectrum=x_test,
+                                         org_error=error_test,
+                                         y_data_mean=param_mean,
+                                         y_data_std=param_std,
+                                         gases=None,
+                                         no_spectra=5,
+                                         repeat=10,
+                                         x_mean=spectrum_mean,
+                                         x_std=spectrum_std,
+                                         abundance=[-7, -3, ])
 
-plotting.sensitivity_plot(spectrum=x_test[0],
-                          wl=wl,
-                          mean_MSE=sensitivity_MSE,
-                          checkpoint_dir=checkpoint_dir,
-                          name='sensi_map')
+sensitivity_plot(spectrum=x_test[0],
+                 wl=wl,
+                 mean_MSE=sensitivity_MSE,
+                 checkpoint_dir=checkpoint_dir,
+                 name='sensi_map')
