@@ -5,7 +5,7 @@ from models import model
 from models.utils import standardise, get_random_idx
 from models.plotting import sensitivity_plot, return_history
 from models.sensitivity import compute_sensitivty_org
-from models.ops import shuffle_spectrum, load_history, compute_MSE, preprocessing
+from models.ops import shuffle_spectrum, load_history, compute_MSE, preprocessing, transform_spectrum
 
 with open('config.yaml') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
@@ -38,12 +38,20 @@ aug_y_valid = np.repeat(y_valid, shuffle_times, axis=0)
 
 
 # Transform input(spectrum)
-spectrum_mean = x_train_set.mean()
-spectrum_std = x_train_set.std()
-std_aug_x_train = standardise(aug_x_train, spectrum_mean, spectrum_std)
-std_aug_x_valid = standardise(aug_x_valid, spectrum_mean, spectrum_std)
-std_x_test = standardise(x_test, spectrum_mean, spectrum_std)
+# spectrum_mean = x_train_set.mean()
+# spectrum_std = x_train_set.std()
+# std_aug_x_train = standardise(aug_x_train, spectrum_mean, spectrum_std)
+# std_aug_x_valid = standardise(aug_x_valid, spectrum_mean, spectrum_std)
+# std_x_test = standardise(x_test, spectrum_mean, spectrum_std)
 
+# alternatives
+t_spectrum, baseline_max, baseline_min, qt = transform_spectrum(x_org_train)
+std_aug_x_train, *_ = transform_spectrum(
+    aug_x_train, baseline_max=baseline_max, baseline_min=baseline_min, qt=qt)
+std_aug_x_valid, *_ = transform_spectrum(
+    aug_x_valid, baseline_max=baseline_max, baseline_min=baseline_min, qt=qt)
+std_x_test, *_ = transform_spectrum(
+    x_test, baseline_max=baseline_max, baseline_min=baseline_min, qt=qt)
 
 # Transform AMPs
 param_mean = y_train_set.mean(axis=0, keepdims=True)

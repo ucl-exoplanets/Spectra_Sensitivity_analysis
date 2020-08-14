@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 import glob
 from .constants import label, R_J
-from .utils import standardise
+from .utils import standardise, normalise_spectrum, normalise
+from sklearn.preprocessing import QuantileTransformer
 
 
 def preprocessing(spectrum_file, param_file):
@@ -72,3 +73,27 @@ def load_history(checkpoint_dir):
         training_loss[idx] += history_data['loss'][:]
         valid_loss[idx] += history_data['val_loss'][:]
     return training_loss, valid_loss
+
+
+def transform_spectrum(spectrum, baseline_max=None, baseline_min=None, qt=None):
+    local_spectrum, _, _ = normalise_spectrum(spectrum)
+    min_spectrum = spectrum.min(axis=1)
+    max_spectrum = spectrum.max(axis=1)
+    if (baseline_max is None) or (baseline_min is None):
+        baseline_norm, baseline_max, baseline_min = normalise(
+            min_spectrum, min_spectrum.max(), min_spectrum.min())
+    else:
+        baseline_norm, baseline_max, baseline_min = normalise(
+            min_spectrum, min_spectrum.max(), min_spectrum.min())
+    height = max_spectrum - min_spectrum
+    if qt is None:
+        qt = QuantileTransformer(n_quantiles=50, random_state=0)
+        height_norm = qt.fit_transform(height.reshape(-1, 1))
+    else:
+        height_norm = qt.transform(height.reshape(-1, 1))
+    height_norm += 1
+
+    t_spectrum = np.transpose(
+        local_spectrum.T*height_norm.flatten() + baseline_norm.T)
+
+    return t_spectrum, baseline_max, baseline_min, qt
