@@ -18,3 +18,14 @@ def random_index(data):
     index = np.arange(len(data))
     np.random.shuffle(index)
     return index
+
+
+def normalise(array, arr_max, arr_min):
+    return (array - arr_min) / (arr_max - arr_min), arr_max, arr_min
+
+
+def normalise_spectrum(spectrum):
+    local_min = spectrum.min(axis=1, keepdims=True)
+    local_max = spectrum.max(axis=1, keepdims=True)
+    norm_spectrum, _, _ = normalise(spectrum, local_max, local_min)
+    return norm_spectrum, local_max, local_min
