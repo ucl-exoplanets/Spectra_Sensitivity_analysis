@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-import utils
-from constants import R_J, label
+from .utils import standardise, project_back, random_index
+from .ops import pre_select
+from .constants import R_J, label
 
 
 def compute_sensitivty_org(model, ground_truth, org_spectrum, org_error, y_data_mean, y_data_std, x_mean, x_std,
@@ -17,20 +18,20 @@ def compute_sensitivty_org(model, ground_truth, org_spectrum, org_error, y_data_
     SD_stack = np.zeros((len(gases), no_spectra, repeat, spectrum_length))
     for idx, gas in enumerate(gases):
         # pre selection, currently doing it element by element
-        selected_x = utils.pre_select(
+        selected_x = pre_select(
             gas, ground_truth.T[idx], org_spectrum, abundance)
         # main loop
         for i in range(no_spectra):
             # produce ref prediction for a particular spectrum
             org_x = selected_x[i]
             error = org_error[i]
-            std_x = utils.standardise(org_x, x_mean, x_std)
+            std_x = standardise(org_x, x_mean, x_std)
             ref_y = model.predict(std_x.reshape(-1, spectrum_length, 1))
-            ref_y_org = utils.project_back(ref_y, y_data_mean, y_data_std)[0]
+            ref_y_org = project_back(ref_y, y_data_mean, y_data_std)[0]
             ref_value = ref_y_org[idx]
             # shuffle given spectrum at different bins and scales.
             for k in range(repeat):
-                random_idx = utils.random_index(org_x)
+                random_idx = random_index(org_x)
                 curr = 0
                 selected_bins = spectrum_length
                 # current implementation will go from x/2 -> x/4 -> x/8 ... until length <=2
@@ -42,10 +43,10 @@ def compute_sensitivty_org(model, ground_truth, org_spectrum, org_error, y_data_
                     shift_pt = np.random.normal(
                         loc=shuffle_x[picked_index], scale=error[picked_index])
                     shuffle_x[picked_index] = shift_pt
-                    shuffle_x_std = utils.standardise(shuffle_x, x_mean, x_std)
+                    shuffle_x_std = standardise(shuffle_x, x_mean, x_std)
                     y_hat = model.predict(
                         shuffle_x_std.reshape(-1, spectrum_length, 1))
-                    y_hat_org = utils.project_back(
+                    y_hat_org = project_back(
                         y_hat, y_data_mean, y_data_std)[0]
 
                     SD_stack[idx, i, k, picked_index] = y_hat_org[idx]
@@ -73,19 +74,19 @@ def compute_sensitivty_std(model, ground_truth, org_spectrum, org_error, x_mean,
     SD_stack = np.zeros((len(gases), no_spectra, repeat, spectrum_length))
     for idx, gas in enumerate(gases):
         # pre selection, currently doing it element by element
-        selected_x = utils.pre_select(
+        selected_x = pre_select(
             gas, ground_truth.T[idx], org_spectrum, abundance)
         # main loop
         for i in range(no_spectra):
             # produce ref prediction for a particular spectrum
             org_x = selected_x[i]
             error = org_error[i]
-            std_x = utils.standardise(org_x, x_mean, x_std)
+            std_x = standardise(org_x, x_mean, x_std)
             ref_y = model.predict(std_x.reshape(-1, spectrum_length, 1))[0]
             ref_value = ref_y[idx]
             # shuffle given spectrum at different bins and scales.
             for k in range(repeat):
-                random_idx = utils.random_index(org_x)
+                random_idx = random_index(org_x)
                 curr = 0
                 selected_bins = spectrum_length
                 # current implementation will go from x/2 -> x/4 -> x/8 ... until length <=2
@@ -97,7 +98,7 @@ def compute_sensitivty_std(model, ground_truth, org_spectrum, org_error, x_mean,
                     shift_pt = np.random.normal(
                         loc=shuffle_x[picked_index], scale=error[picked_index])
                     shuffle_x[picked_index] = shift_pt
-                    shuffle_x_std = utils.standardise(shuffle_x, x_mean, x_std)
+                    shuffle_x_std = standardise(shuffle_x, x_mean, x_std)
                     y_hat = model.predict(
                         shuffle_x_std.reshape(-1, spectrum_length, 1))[0]
                     SD_stack[idx, i, k, picked_index] = y_hat[idx]

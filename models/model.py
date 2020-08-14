@@ -1,13 +1,13 @@
 import numpy as np
 import keras
 import sys
+import os
 from keras.models import load_model, Model
-import architecture
 from keras.utils import plot_model
 from keras.callbacks import ModelCheckpoint, CSVLogger
-import os
-import plotting
-import utils
+from .plotting import plot_compare_truth
+from .utils import project_back
+from .architecture import CNN_model
 
 
 class Network():
@@ -18,7 +18,7 @@ class Network():
 
     def compile_model(self, lr):
         if self.config['training']['useCNN']:
-            sequence, param, decision_layer = architecture.CNN_model(
+            sequence, param, decision_layer = CNN_model(
                 param_length=self.param_length, spectrum_length=self.spectrum_length, config=self.config)
         elif self.config['training']['useMLP']:
             pass
@@ -87,12 +87,12 @@ class Network():
     def produce_result(self, std_x_test, y_test, param_mean, param_std, checkpoint_dir):
         os.makedirs(os.path.join(checkpoint_dir, 'results'), exist_ok=True)
         y_predict = self.predict_result(std_x_test)
-        y_predict_org = utils.project_back(y_predict, param_mean, param_std)
-        y_test_org = utils.project_back(y_test, param_mean, param_std)
+        y_predict_org = project_back(y_predict, param_mean, param_std)
+        y_test_org = project_back(y_test, param_mean, param_std)
 
-        plotting.plot_compare_truth(y_test_org=y_test_org,
-                                    y_predict_org=y_predict_org,
-                                    checkpoint_dir=checkpoint_dir,
-                                    order=0,
-                                    scale=None,
-                                    chosen_gas=None, alpha=0.4)
+        plot_compare_truth(y_test_org=y_test_org,
+                           y_predict_org=y_predict_org,
+                           checkpoint_dir=checkpoint_dir,
+                           order=0,
+                           scale=None,
+                           chosen_gas=None, alpha=0.4)

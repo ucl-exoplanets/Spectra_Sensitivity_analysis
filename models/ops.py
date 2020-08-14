@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 import glob
-from constants import label, R_J
-import utils
+from .constants import label, R_J
+from .utils import standardise
 
 
 def preprocessing(spectrum_file, param_file):
@@ -42,7 +42,7 @@ def shuffle_spectrum(spectrum, error, times=10):
 
 def augment_data(spectrum, error, param, times, spectrum_mean, spectrum_std):
     shuffle_x = shuffle_spectrum(spectrum, error, times=times)
-    std_x_aug = utils.standardise(shuffle_x, spectrum_mean, spectrum_std)
+    std_x_aug = standardise(shuffle_x, spectrum_mean, spectrum_std)
     std_param_aug = np.repeat(param, times, axis=0)
     return std_x_aug, std_param_aug
 
@@ -65,7 +65,6 @@ def load_history(checkpoint_dir):
     # TODO return none when list is empty
     history_data = pd.read_csv(training_log[0])
     epoch = len(history_data['loss'])
-
     training_loss = np.zeros((len(training_log), epoch))
     valid_loss = np.zeros((len(training_log), epoch))
     for idx, hist in enumerate(training_log):

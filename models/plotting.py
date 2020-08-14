@@ -4,7 +4,7 @@ import numpy as np
 import os
 import pandas as pd
 import glob
-from constants import M_J, R_J, label, units
+from .constants import M_J, R_J, label, units
 
 
 def plot_compare_truth(y_test_org, y_predict_org, checkpoint_dir, order=0,
