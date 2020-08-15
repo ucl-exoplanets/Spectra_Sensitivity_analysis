@@ -28,15 +28,15 @@ def CNN_model(spectrum_length, param_length, config):
         if config['CNN']['maxPool'][i] == 1:
             x = MaxPooling1D(pool_size=2)(x)
 
-        flatten_x = Flatten()(x)
-        if config['training']['extraInput']:
-            add_param = param
-            flatten_x = Concatenate(axis=-1)([flatten_x, add_param])
-        dense_layer = Dense(
-            config['CNN']['denseUnit'], activation='linear')(flatten_x)
-        dense_layer = LeakyReLU(0.2)(dense_layer)
-        dense_layer = Dropout(config['training']['dropRate'])(dense_layer)
-        decision_layer = Dense(param_length, activation='linear')(dense_layer)
+    flatten_x = Flatten()(x)
+    if config['training']['extraInput']:
+        add_param = param
+        flatten_x = Concatenate(axis=-1)([flatten_x, add_param])
+    dense_layer = Dense(
+        config['CNN']['denseUnit'], activation='linear')(flatten_x)
+    dense_layer = LeakyReLU(0.2)(dense_layer)
+    dense_layer = Dropout(config['training']['dropRate'])(dense_layer)
+    decision_layer = Dense(param_length, activation='linear')(dense_layer)
     return sequence, param, decision_layer
 
 

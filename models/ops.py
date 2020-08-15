@@ -98,6 +98,7 @@ def transform_spectrum(spectrum, baseline_max=None, baseline_min=None, qt=None):
         height_norm = qt.fit_transform(height.reshape(-1, 1))
     else:
         height_norm = qt.transform(height.reshape(-1, 1))
+    height_norm *= 2
     height_norm += 1
 
     t_spectrum = np.transpose(

@@ -6,7 +6,7 @@ def get_random_idx(array, portion=0.7, seed=42):
     return np.random.random_sample(len(array)) < portion
 
 
-def standardise(data, mean, std):
+def standardise(data, mean, std, *_):
     return (data - mean)/std
 
 

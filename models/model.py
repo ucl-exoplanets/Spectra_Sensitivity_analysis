@@ -22,14 +22,14 @@ class Network():
                 param_length=self.param_length, spectrum_length=self.spectrum_length, config=self.config)
         elif self.config['training']['useMLP']:
             pass
-        elif self.config['training']['useLSSTM']:
+        elif self.config['training']['useLSTM']:
             pass
         else:
             print("Please select an architecture")
             sys.exit()
         self.model = Model(inputs=sequence, outputs=decision_layer)
         self.model.compile(loss=self.config['training']['lossFn'],
-                           optimizer=keras.optimizers.Adam(lr=lr, decay=self.config['training']['decay']), metrics=['mse'])
+                           optimizer=keras.optimizers.Adam(lr=lr, decay=10**self.config['training']['decay']), metrics=['mse'])
         self.model.summary()
 
     def train_model(self, X_train, y_train, X_valid, y_valid, epochs=30, lr=0.001, batch_size=64, checkpoint_dir='./', cv_order=0):
@@ -61,8 +61,13 @@ class Network():
                 checkpoint_dir, 'model.png'), show_shapes=True)
 
         # ensure they have the right shape
-        X_train = X_train.reshape(-1, self.spectrum_length, 1)
-        X_valid = X_valid.reshape(-1, self.spectrum_length, 1)
+        if isinstance(X_train, list):
+            X_train[0] = X_train[0].reshape(-1, self.spectrum_length, 1)
+            X_valid[0] = X_valid[0].reshape(-1, self.spectrum_length, 1)
+        else:
+
+            X_train = X_train.reshape(-1, self.spectrum_length, 1)
+            X_valid = X_valid.reshape(-1, self.spectrum_length, 1)
 
         # trainings
         self.model.fit(X_train, y_train,
@@ -80,11 +85,14 @@ class Network():
         return self.model
 
     def predict_result(self, x_test):
-        x_test = x_test.reshape(-1, self.spectrum_length, 1)
+        if isinstance(x_test, list):
+            x_test[0] = x_test[0].reshape(-1, self.spectrum_length, 1)
+        else:
+            x_test = x_test.reshape(-1, self.spectrum_length, 1)
         prediction = self.model.predict(x_test)
         return prediction
 
-    def produce_result(self, std_x_test, y_test, param_mean, param_std, checkpoint_dir):
+    def produce_result(self, std_x_test, y_test, param_mean, param_std, checkpoint_dir, order=0):
         os.makedirs(os.path.join(checkpoint_dir, 'results'), exist_ok=True)
         y_predict = self.predict_result(std_x_test)
         y_predict_org = project_back(y_predict, param_mean, param_std)
@@ -93,6 +101,6 @@ class Network():
         plot_compare_truth(y_test_org=y_test_org,
                            y_predict_org=y_predict_org,
                            checkpoint_dir=checkpoint_dir,
-                           order=0,
+                           order=order,
                            scale=None,
                            chosen_gas=None, alpha=0.4)

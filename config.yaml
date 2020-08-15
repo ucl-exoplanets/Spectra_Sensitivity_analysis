@@ -2,16 +2,22 @@
 general:
   numClass: 2
   displayNet: true
+  checkpoint_dir: 'output/cnn/trans_CNN_32_64_128_dense_128/'
+  x_data_path: "data/Massive_ariel/low_X/lowX_spectra.npy"
+  y_data_path: "data/Massive_ariel/low_X/lowX_param_file.csv"
+  seed: 42
 
 training:
+  train: true
   useCNN: true
   useMLP: false
   useLSTM: false
-  decay: 0
+  decay: -4
   dropRate: 0.1
   lossFn: "mse"
   extraInput: false
-  shuffleTimes: 5
+  shuffleTimes: 10
+  cv: 5
 
 
 CNN:
@@ -20,7 +26,7 @@ CNN:
   activation: "relu"
   stride: [1,1,1]
   batchNorm: [1,1,1]
-  maxPool: [1,1,1]
+  maxPool: [1,1,0]
   denseUnit: 128
   denseActi: "leakyRELU"
 
