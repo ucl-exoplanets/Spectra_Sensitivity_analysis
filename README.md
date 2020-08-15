@@ -16,7 +16,7 @@ There are two ways to use the code:
 For those who would like to train a model and use the sensitivity test, you can run the following command in the terminal: 
 
 ```
-python runfile.py
+python runfile.py --config 'config.yaml' --epochs 100 --batch_size 64 --lr 0.01
 ```
 Finer settings are available to edit via config.yml. 
 
@@ -65,6 +65,8 @@ Description of model arguments:
 **abundance**: only include spectra within certain log abundances range , currently it will apply to all the gases. If None, every spectra will be considered.
 
 The normalisation factors (mean , s.d. ) are needed in order to normalise the shuffled spectrum before going into the model. Readers might need to change the normalisation method if they are using a different preprocessing procedure. 
+
+## Sample Figures
 
 ## Citation
 If our tool has been useful to your research/work, please kindly cite us:
