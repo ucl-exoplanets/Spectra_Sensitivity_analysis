@@ -158,7 +158,7 @@ def return_history(training_loss, valid_loss, checkpoint_dir):
     plt.close()
 
 
-def sensitivity_plot(mean_MSE, wl, spectrum, checkpoint_dir, name="map"):
+def sensitivity_plot(mean_MSE, wl, spectrum, checkpoint_dir, fname="map"):
 
     fig = plt.figure(figsize=(17, 13))
     gas_contri = np.load("./data/all_gas_contri.npy")
@@ -209,4 +209,4 @@ def sensitivity_plot(mean_MSE, wl, spectrum, checkpoint_dir, name="map"):
     cbar = fig.colorbar(ax, cax=cbar_ax, ticks=[
                         lq, q], orientation='horizontal')
     cbar.ax.set_xticklabels(['Least Sensitive', 'Most Sensitive'], fontsize=13)
-    plt.savefig(checkpoint_dir + f"{name}.png")
+    plt.savefig(checkpoint_dir + f"{fname}.png")

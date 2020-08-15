@@ -4,7 +4,7 @@ import pandas as pd
 from models import model
 from models.utils import standardise, get_random_idx
 from models.plotting import sensitivity_plot, return_history
-from models.sensitivity import compute_sensitivty_org
+from models.sensitivity import compute_sensitivty_org, compute_sensitivty_std
 from models.ops import shuffle_spectrum, load_history, compute_MSE, preprocessing, transform_spectrum
 
 with open('config.yaml') as f:
@@ -46,12 +46,11 @@ aug_y_valid = np.repeat(y_valid, shuffle_times, axis=0)
 
 # alternatives
 t_spectrum, baseline_max, baseline_min, qt = transform_spectrum(x_org_train)
-std_aug_x_train, *_ = transform_spectrum(
-    aug_x_train, baseline_max=baseline_max, baseline_min=baseline_min, qt=qt)
-std_aug_x_valid, *_ = transform_spectrum(
-    aug_x_valid, baseline_max=baseline_max, baseline_min=baseline_min, qt=qt)
-std_x_test, *_ = transform_spectrum(
-    x_test, baseline_max=baseline_max, baseline_min=baseline_min, qt=qt)
+std_aug_x_train, * \
+    _ = transform_spectrum(aug_x_train, baseline_max, baseline_min, qt)
+std_aug_x_valid, * \
+    _ = transform_spectrum(aug_x_valid, baseline_max, baseline_min, qt)
+std_x_test, *_ = transform_spectrum(x_test, baseline_max, baseline_min, qt)
 
 # Transform AMPs
 param_mean = y_train_set.mean(axis=0, keepdims=True)
@@ -65,15 +64,15 @@ checkpoint_dir = 'output/cnn/test1/'
 model = model.Network(param_length=trainable_param.shape[1],
                       spectrum_length=spectrum.shape[1],
                       config=config)
-model.train_model(X_train=std_aug_x_train,
-                  y_train=std_aug_y_train,
-                  X_valid=std_aug_x_valid,
-                  y_valid=std_aug_y_valid,
-                  epochs=5,
-                  lr=0.001,
-                  batch_size=128,
-                  checkpoint_dir=checkpoint_dir,
-                  cv_order=0)
+# model.train_model(X_train=std_aug_x_train,
+#                   y_train=std_aug_y_train,
+#                   X_valid=std_aug_x_valid,
+#                   y_valid=std_aug_y_valid,
+#                   epochs=5,
+#                   lr=0.001,
+#                   batch_size=128,
+#                   checkpoint_dir=checkpoint_dir,
+#                   cv_order=0)
 
 # load model and evaluate
 demo_model = model.load_model(checkpoint_dir+'ckt/checkpt_0.h5')
@@ -88,21 +87,33 @@ MSE_score = compute_MSE(std_y_test, std_y_pred)
 MSE_score.to_csv(checkpoint_dir+"MSE.csv", index=False)
 
 # Sensitivity analysis
-sensitivity_MSE = compute_sensitivty_org(model=demo_model,
-                                         ground_truth=std_y_test,
+# sensitivity_MSE = compute_sensitivty_org(model=demo_model,
+#                                          ground_truth=std_y_test,
+#                                          org_spectrum=x_test,
+#                                          org_error=error_test,
+#                                          y_data_mean=param_mean,
+#                                          y_data_std=param_std,
+#                                          gases=None,
+#                                          no_spectra=5,
+#                                          repeat=10,
+#                                          x_mean=spectrum_mean,
+#                                          x_std=spectrum_std,
+#                                          abundance=[-7, -3, ])
+sensitivity_MSE = compute_sensitivty_std(model=demo_model,
+                                         ground_truth=y_test,
                                          org_spectrum=x_test,
                                          org_error=error_test,
-                                         y_data_mean=param_mean,
-                                         y_data_std=param_std,
+                                         transform='transform',
                                          gases=None,
                                          no_spectra=5,
                                          repeat=10,
-                                         x_mean=spectrum_mean,
-                                         x_std=spectrum_std,
-                                         abundance=[-7, -3, ])
+                                         abundance=[-7, -3, ],
+                                         baseline_max=baseline_max,
+                                         baseline_min=baseline_min,
+                                         qt=qt)
 
 sensitivity_plot(spectrum=x_test[0],
                  wl=wl,
                  mean_MSE=sensitivity_MSE,
                  checkpoint_dir=checkpoint_dir,
-                 name='sensi_map')
+                 fname='sensi_map')

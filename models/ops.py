@@ -76,6 +76,8 @@ def load_history(checkpoint_dir):
 
 
 def transform_spectrum(spectrum, baseline_max=None, baseline_min=None, qt=None):
+    if spectrum.ndim == 1:
+        spectrum = spectrum.reshape(-1, len(spectrum))
     local_spectrum, _, _ = normalise_spectrum(spectrum)
     min_spectrum = spectrum.min(axis=1)
     max_spectrum = spectrum.max(axis=1)
@@ -84,7 +86,7 @@ def transform_spectrum(spectrum, baseline_max=None, baseline_min=None, qt=None):
             min_spectrum, min_spectrum.max(), min_spectrum.min())
     else:
         baseline_norm, baseline_max, baseline_min = normalise(
-            min_spectrum, min_spectrum.max(), min_spectrum.min())
+            min_spectrum, baseline_max, baseline_min)
     height = max_spectrum - min_spectrum
     if qt is None:
         qt = QuantileTransformer(n_quantiles=50, random_state=0)
