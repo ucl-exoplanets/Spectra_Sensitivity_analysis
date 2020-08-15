@@ -6,7 +6,7 @@ from .utils import standardise, normalise_spectrum, normalise
 from sklearn.preprocessing import QuantileTransformer
 
 
-def preprocessing(spectrum_file, param_file):
+def preprocessing(spectrum_file, param_file, Rs=False):
     # Only the first 10 items are trainable.
     trainable_param = param_file.values[:, :9]
     # turn into logarithm.
@@ -16,7 +16,12 @@ def preprocessing(spectrum_file, param_file):
     spectrum = spectrum_file[:, 0, :]
     error = spectrum_file[:, 1, :]
     wl = spectrum_file[0, 2, :]
-    return spectrum, error, wl, trainable_param
+    if Rs:
+        Rstar = param_file.values[:, 9]
+        return spectrum, error, wl, trainable_param, Rstar
+    else:
+
+        return spectrum, error, wl, trainable_param
 
 
 def compute_MSE(y_true, y_pred, gas_label=None):
