@@ -7,7 +7,7 @@ This is a code repository for the paper: Peeking inside the Black Box: Interpret
 Inside you will find detailed implementation of the 3 DNNs, and how to carry out sensitivity test for the trained model. You can find the source data file here.
 
 ### List of authors
-__Kai Hou Yip, Quentin Changeat, Nikolaos Nikolaou, Mario Morvan, Billy Edwards, Ingo P. Waldmann, Giovanna Tinetti__
+_Kai Hou Yip, Quentin Changeat, Nikolaos Nikolaou, Mario Morvan, Billy Edwards, Ingo P. Waldmann, and Giovanna Tinetti_
 
 ## How to use it
 There are two ways to use the code:
@@ -18,9 +18,10 @@ For those who would like to train a model and use the sensitivity test, you can 
 ```
 python runfile.py
 ```
+Finer settings are available to edit via config.yml. 
 
 ### Sensitivty test only
-For those who would like to apply sensitivity test on their own trained model , you may do so by:
+For those who would like to only apply sensitivity test on their own trained model , you may do so by:
 ```
 import sensitivity
 test_result = sensitivity.compute_sensitivty_org(
@@ -66,6 +67,6 @@ Description of model arguments:
 The normalisation factors (mean , s.d. ) are needed in order to normalise the shuffled spectrum before going into the model. Readers might need to change the normalisation method if they are using a different preprocessing procedure. 
 
 ## Citation
-If our tool has been useful to your research, please kindly cite us:
+If our tool has been useful to your research/work, please kindly cite us:
 
 ## License
