@@ -7,7 +7,7 @@ from keras.utils import plot_model
 from keras.callbacks import ModelCheckpoint, CSVLogger
 from .plotting import plot_compare_truth
 from .utils import project_back
-from .architecture import CNN_model
+from .architecture import CNN_model, LSTM_model, MLP_model
 
 
 class Network():
@@ -17,16 +17,19 @@ class Network():
         self.config = config
 
     def compile_model(self, lr):
-        if self.config['training']['useCNN']:
-            sequence, param, decision_layer = CNN_model(
-                param_length=self.param_length, spectrum_length=self.spectrum_length, config=self.config)
-        elif self.config['training']['useMLP']:
-            pass
-        elif self.config['training']['useLSTM']:
-            pass
-        else:
+        Available_model = np.array([self.config['training']['useCNN'],
+                                    self.config['training']['useMLP'],
+                                    self.config['training']['useLSTM']])
+        if Available_model.sum() != 1:
             print("Please select an architecture")
             sys.exit()
+        Architectures = np.array([CNN_model, MLP_model, LSTM_model])
+        idx = np.argwhere(Available_model == True)[0][0]
+        print(np.argwhere(Available_model == True))
+        build_model = Architectures[idx]
+        sequence, param, decision_layer = build_model(
+            param_length=self.param_length, spectrum_length=self.spectrum_length, config=self.config)
+
         self.model = Model(inputs=sequence, outputs=decision_layer)
         self.model.compile(loss=self.config['training']['lossFn'],
                            optimizer=keras.optimizers.Adam(lr=lr, decay=10**self.config['training']['decay']), metrics=['mse'])
