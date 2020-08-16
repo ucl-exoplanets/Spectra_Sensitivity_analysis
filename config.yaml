@@ -2,16 +2,16 @@
 general:
   numClass: 2
   displayNet: true
-  checkpoint_dir: 'output/cnn/trans_CNN_32_64_128_dense_128/'
   x_data_path: "data/Massive_ariel/low_X/lowX_spectra.npy"
   y_data_path: "data/Massive_ariel/low_X/lowX_param_file.csv"
+  checkpoint_dir: 'output/lstm/std_LSTM_diff_opt/'
   seed: 42
 
 training:
   train: true
-  useCNN: true
+  useCNN: false
   useMLP: false
-  useLSTM: false
+  useLSTM: true
   decay: -4
   dropRate: 0.1
   lossFn: "mse"
@@ -21,8 +21,8 @@ training:
 
 
 CNN:
-  layers: [ 32,64,128]
-  kernels: [5,5,5]
+  layers: [ 32,64,96]
+  kernels: [3,3,3]
   activation: "relu"
   stride: [1,1,1]
   batchNorm: [1,1,1]
@@ -35,7 +35,7 @@ MLP:
   activation: "relu"
 
 LSTM:
-  layers: [200,200]
+  layers: [100,100]
   denseUnit: 16
   lstmActi: 'tanh'
   maxPool: [1,1]

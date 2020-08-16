@@ -51,20 +51,43 @@ def LSTM_model(spectrum_length, param_length, config):
     x = sequence
     for i in range(len(config['LSTM']['layers'])):
         # remove the output seq on last layer. less hidden units.
-        if i == len(self.LSTMnet_param['lstm_units'])-1:
+        if i == len(config['LSTM']['layers'])-1:
             x = Bidirectional(
                 LSTM(config['LSTM']['layers'][i], return_sequences=False))(x)
         else:
             x = Bidirectional(
                 LSTM(config['LSTM']['layers'][i], return_sequences=True))(x)
-
-    dense_layer = Dense(config['LSTM']['denseUnit'], activation='linear')(x)
-    dense_layer = LeakyReLU(0.2)(dense_layer)
-
     if config['training']['extraInput']:
         add_param = param
-        dense_layer = Concatenate(axis=-1)([dense_layer, add_param])
+        x = Concatenate(axis=-1)([x, add_param])
+    dense_layer = Dense(config['LSTM']['denseUnit'], activation='linear')(x)
+    dense_layer = LeakyReLU(0.2)(dense_layer)
+    dense_layer = Dropout(config['training']['dropRate'])(dense_layer)
+    decision_layer = Dense(param_length, activation='linear')(dense_layer)
+    return sequence, param, decision_layer
 
-    dense_layer = Dropout(self.train_param['droprate'])(dense_layer)
-    decision_layer = Dense(
-        self.train_param['output_value'], activation='linear')(dense_layer)
+
+def MLP_model(spectrum_length, param_length, config):
+    # input image dimensions
+    input_shape = (spectrum_length, 1)
+    param_shape = (1,)
+    # Start Neural Network
+
+    sequence = Input(shape=input_shape)
+    param = Input(shape=param_shape)
+    x = sequence
+    activation = config['MLP']['activation']
+
+    # Flatten the sequence for MLP layers
+    x = Flatten()(x)
+
+    # concatenate extra param to the sequence
+    if config['training']['extraInput']:
+        add_param = param
+        x = Concatenate(axis=-1)([x, add_param])
+    # MLP layer.
+    for i in range(len(config['MLP']['layers'])):
+        x = Dense(config['MLP']['layers'][i], activation=activation)(x)
+    dense_layer = Dropout(config['training']['dropRate'])(x)
+    decision_layer = Dense(param_length, activation='linear')(dense_layer)
+    return sequence, param, decision_layer

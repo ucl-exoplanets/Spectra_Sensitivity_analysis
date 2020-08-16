@@ -25,7 +25,7 @@ def run_DNN(config_path, epochs, lr, batch_size,):
         spectrum_file, param_file, Rs=False)
 
     # train test split
-    train_test_idx = get_random_idx(spectrum, portion=0.8)
+    train_test_idx = get_random_idx(spectrum, portion=0.8, seed=seed)
     x_train_set, x_test = spectrum[train_test_idx], spectrum[~train_test_idx]
     y_train_set, y_test = trainable_param[train_test_idx], trainable_param[~train_test_idx]
     error_train_set, error_test = error[train_test_idx], error[~train_test_idx]
@@ -51,21 +51,22 @@ def run_DNN(config_path, epochs, lr, batch_size,):
         # aug_Rstar_valid = np.repeat(Rster_valid, shuffle_times, axis=0)
 
         # Transform input(spectrum)
-        # spectrum_mean = x_train_set.mean()
-        # spectrum_std = x_train_set.std()
-        # std_aug_x_train = standardise(aug_x_train, spectrum_mean, spectrum_std)
-        # std_aug_x_valid = standardise(aug_x_valid, spectrum_mean, spectrum_std)
-        # std_x_test = standardise(x_test, spectrum_mean, spectrum_std)
+        spectrum_mean = x_train_set.mean()
+        spectrum_std = x_train_set.std()
+        std_aug_x_train = standardise(aug_x_train, spectrum_mean, spectrum_std)
+        std_aug_x_valid = standardise(aug_x_valid, spectrum_mean, spectrum_std)
+        std_x_test = standardise(x_test, spectrum_mean, spectrum_std)
+        std_x_valid = standardise(x_org_valid, spectrum_mean, spectrum_std)
 
         # alternatives
-        t_spectrum, baseline_max, baseline_min, qt = transform_spectrum(
-            x_org_train)
-        std_aug_x_train, * \
-            _ = transform_spectrum(aug_x_train, baseline_max, baseline_min, qt)
-        std_aug_x_valid, * \
-            _ = transform_spectrum(aug_x_valid, baseline_max, baseline_min, qt)
-        std_x_test, * \
-            _ = transform_spectrum(x_test, baseline_max, baseline_min, qt)
+        # t_spectrum, baseline_max, baseline_min, qt = transform_spectrum(
+        #     x_org_train)
+        # std_aug_x_train, * \
+        #     _ = transform_spectrum(aug_x_train, baseline_max, baseline_min, qt)
+        # std_aug_x_valid, * \
+        #     _ = transform_spectrum(aug_x_valid, baseline_max, baseline_min, qt)
+        # std_x_test, * \
+        #     _ = transform_spectrum(x_test, baseline_max, baseline_min, qt)
 
         # Transform AMPs
         param_mean = y_train_set.mean(axis=0, keepdims=True)
@@ -73,6 +74,7 @@ def run_DNN(config_path, epochs, lr, batch_size,):
         std_aug_y_train = standardise(aug_y_train, param_mean, param_std)
         std_aug_y_valid = standardise(aug_y_valid, param_mean, param_std)
         std_y_test = standardise(y_test, param_mean, param_std)
+        std_y_valid = standardise(y_valid, param_mean, param_std)
 
         # Transform Rstar (only used if extra input = True)
         # Rs_mean = Rster_train_set.mean(axis=0, keepdims=True)
@@ -87,8 +89,8 @@ def run_DNN(config_path, epochs, lr, batch_size,):
         if config['training']['train']:
             DNN.train_model(X_train=std_aug_x_train,
                             y_train=std_aug_y_train,
-                            X_valid=std_aug_x_valid,
-                            y_valid=std_aug_y_valid,
+                            X_valid=std_x_valid,
+                            y_valid=std_y_valid,
                             epochs=epochs,
                             lr=lr,
                             batch_size=batch_size,
@@ -118,18 +120,18 @@ def run_DNN(config_path, epochs, lr, batch_size,):
     demo_model = model.load_model(checkpoint_dir+'ckt/checkpt_0.h5')
 
     # Sensitivity analysis
-    sensitivity_MSE = compute_sensitivty_org(model=demo_model,
-                                             ground_truth=y_test,
-                                             org_spectrum=x_test,
-                                             org_error=error_test,
-                                             y_data_mean=param_mean,
-                                             y_data_std=param_std,
-                                             gases=None,
-                                             no_spectra=300,
-                                             repeat=1000,
-                                             x_mean=spectrum_mean,
-                                             x_std=spectrum_std,
-                                             abundance=[-7, -3, ])
+    # sensitivity_MSE = compute_sensitivty_org(model=demo_model,
+    #                                          ground_truth=y_test,
+    #                                          org_spectrum=x_test,
+    #                                          org_error=error_test,
+    #                                          y_data_mean=param_mean,
+    #                                          y_data_std=param_std,
+    #                                          gases=None,
+    #                                          no_spectra=300,
+    #                                          repeat=1000,
+    #                                          x_mean=spectrum_mean,
+    #                                          x_std=spectrum_std,
+    #                                          abundance=[-7, -3, ])
     # sensitivity_MSE = compute_sensitivty_std(model=demo_model,
     #                                          ground_truth=y_test,
     #                                          org_spectrum=x_test,
@@ -139,11 +141,12 @@ def run_DNN(config_path, epochs, lr, batch_size,):
     #                                          no_spectra=300,
     #                                          repeat=1000,
     #                                          abundance=[-7, -3, ],
-    #                                          x_mean=spectrum_mean,
-    #                                          x_std=spectrum_std,)
+    #                                          baseline_max=baseline_max,
+    #                                          baseline_min=baseline_min,
+    #                                          qt=qt)
 
-    sensitivity_plot(spectrum=x_test[0],
-                     wl=wl,
-                     mean_MSE=sensitivity_MSE,
-                     checkpoint_dir=checkpoint_dir,
-                     fname='sensi_map')
+    # sensitivity_plot(spectrum=x_test[0],
+    #                  wl=wl,
+    #                  mean_MSE=sensitivity_MSE,
+    #                  checkpoint_dir=checkpoint_dir,
+    #                  fname='sensi_map')
