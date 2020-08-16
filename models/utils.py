@@ -14,7 +14,8 @@ def project_back(data, mean, std):
     return data * std + mean
 
 
-def random_index(data):
+def random_index(data, seed=42):
+    np.random.seed(seed)
     index = np.arange(len(data))
     np.random.shuffle(index)
     return index

@@ -92,6 +92,7 @@ def transform_spectrum(spectrum, baseline_max=None, baseline_min=None, qt=None):
     else:
         baseline_norm, baseline_max, baseline_min = normalise(
             min_spectrum, baseline_max, baseline_min)
+    baseline_norm *= 2
     height = max_spectrum - min_spectrum
     if qt is None:
         qt = QuantileTransformer(n_quantiles=50, random_state=0)

@@ -1,5 +1,5 @@
 import argparse
-from runfile import run_DNN
+from train_model import run_DNN
 
 parser = argparse.ArgumentParser(description='Parser for run_model.py.')
 
