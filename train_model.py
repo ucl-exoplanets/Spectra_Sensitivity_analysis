@@ -89,8 +89,8 @@ def run_DNN(config_path, epochs, lr, batch_size,):
         if config['training']['train']:
             DNN.train_model(X_train=std_aug_x_train,
                             y_train=std_aug_y_train,
-                            X_valid=std_x_valid,
-                            y_valid=std_y_valid,
+                            X_valid=std_aug_x_valid,
+                            y_valid=std_aug_y_valid,
                             epochs=epochs,
                             lr=lr,
                             batch_size=batch_size,
