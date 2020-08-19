@@ -8,8 +8,8 @@ from tensorflow.keras.utils import plot_model
 from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger
 from .plotting import plot_compare_truth
 from .utils import project_back
-from .architecture import CNN_model_hp, LSTM_model, MLP_model
-from kerastuner.tuners import RandomSearch
+from .architecture import CNN_model, LSTM_model, MLP_model_hp
+from kerastuner.tuners import RandomSearch, BayesianOptimization
 
 
 class Network():
@@ -18,23 +18,25 @@ class Network():
         self.spectrum_length = spectrum_length
         self.config = config
 
-    def compile_model(self, hp):
+    def compile_model(self, lr):
         Available_model = np.array([self.config['training']['useCNN'],
                                     self.config['training']['useMLP'],
                                     self.config['training']['useLSTM']])
         if Available_model.sum() != 1:
             print("Please select an architecture")
             sys.exit()
-        Architectures = np.array([CNN_model_hp, MLP_model, LSTM_model])
+        Architectures = np.array([CNN_model, MLP_model_hp, LSTM_model])
         idx = np.argwhere(Available_model == True)[0][0]
         print(np.argwhere(Available_model == True))
         build_model = Architectures[idx]
         sequence, param, decision_layer = build_model(
-            param_length=self.param_length, spectrum_length=self.spectrum_length, config=self.config, hp=hp)
+            param_length=self.param_length, spectrum_length=self.spectrum_length, config=self.config)
 
         self.model = Model(inputs=sequence, outputs=decision_layer)
         self.model.compile(loss=self.config['training']['lossFn'],
-                           optimizer=keras.optimizers.Adam(lr=hp.Choice('learning_rate', [1e-2, 1e-3, 1e-4]), decay=10**self.config['training']['decay']), metrics=['mse'])
+                           optimizer=keras.optimizers.Adam(lr=0.001, decay=10**self.config['training']['decay']), metrics=['mse'])
+        # self.model.compile(loss=self.config['training']['lossFn'],
+        #                    optimizer=keras.optimizers.Adam(lr=hp.Choice('learning_rate', [1e-2, 1e-3, 1e-4]), decay=10**self.config['training']['decay']), metrics=['mse'])
         self.model.summary()
         return self.model
 
@@ -60,15 +62,15 @@ class Network():
                                       period=1)
         callbacks = [model_cktpt, csv_logger]
 
-        # self.compile_model(lr=lr)
-        tuner = RandomSearch(
-            self.compile_model,
-            objective='val_loss',
-            max_trials=5,
-            executions_per_trial=3,
-            directory='my_dir',
-            project_name='helloworld')
-        tuner.search_space_summary()
+        self.compile_model(lr)
+        # tuner=RandomSearch(
+        #     self.compile_model,
+        #     objective='val_loss',
+        #     max_trials=5,
+        #     executions_per_trial=3,
+        #     directory='hp_test3',
+        #     project_name='hpactual_mlp')
+        # tuner.search_space_summary()
         # display the network
         if self.config['general']['displayNet']:
             plot_model(self.model, to_file=os.path.join(
@@ -84,29 +86,32 @@ class Network():
             X_valid = X_valid.reshape(-1, self.spectrum_length, 1)
 
         # trainings
-        # self.model.fit(X_train, y_train,
-        #                batch_size=batch_size,
-        #                epochs=epochs,
-        #                verbose=1,
-        #                validation_data=(X_valid, y_valid),
-        #                shuffle=True,
-        #                callbacks=callbacks)
-        tuner.search(X_train, y_train,
-                     epochs=30,
-                     validation_data=(X_valid, y_valid))
-        # score = self.model.evaluate(X_valid, y_valid, verbose=0)
+        self.model.fit(X_train, y_train,
+                       batch_size=batch_size,
+                       epochs=epochs,
+                       verbose=1,
+                       validation_data=(X_valid, y_valid),
+                       shuffle=True,
+                       callbacks=callbacks)
+        # tuner.search(X_train, y_train,
+        #              epochs=50,
+        #              validation_data=(X_valid, y_valid))
+        # tuner.results_summary()
+        score = self.model.evaluate(X_valid, y_valid, verbose=0)
         return None
 
     def load_model(self, checkpoint_dir_path):
         self.model = load_model(checkpoint_dir_path)
         return self.model
 
-    def predict_result(self, x_test):
+    def predict_result(self, x_test, y_test=None):
         if isinstance(x_test, list):
             x_test[0] = x_test[0].reshape(-1, self.spectrum_length, 1)
         else:
             x_test = x_test.reshape(-1, self.spectrum_length, 1)
         prediction = self.model.predict(x_test)
+        if y_test is not None:
+            print(self.model.evaluate(x_test, y_test))
         return prediction
 
     def produce_result(self, std_x_test, y_test, param_mean, param_std, checkpoint_dir, order=0):

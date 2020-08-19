@@ -122,3 +122,30 @@ def CNN_model_hp(spectrum_length, param_length, config, hp):
     dense_layer = Dropout(hp.Choice('droprate', [0.1, 0.2, 0.3]))(dense_layer)
     decision_layer = Dense(param_length, activation='linear')(dense_layer)
     return sequence, param, decision_layer
+
+
+def MLP_model_hp(spectrum_length, param_length, config, hp):
+    # input image dimensions
+    input_shape = (spectrum_length, 1)
+    param_shape = (1,)
+    # Start Neural Network
+
+    sequence = Input(shape=input_shape)
+    param = Input(shape=param_shape)
+    x = sequence
+    activation = config['MLP']['activation']
+
+    # Flatten the sequence for MLP layers
+    x = Flatten()(x)
+
+    # concatenate extra param to the sequence
+    if config['training']['extraInput']:
+        add_param = param
+        x = Concatenate(axis=-1)([x, add_param])
+    # MLP layer.
+    for i in range(hp.Int('num_layers', 2, 4)):
+        x = Dense(hp.Int('units' + str(i), min_value=32,
+                         max_value=256, step=32), activation=activation)(x)
+    dense_layer = Dropout(hp.Choice('droprate', [0.1, 0.2, 0.3]))(x)
+    decision_layer = Dense(param_length, activation='linear')(dense_layer)
+    return sequence, param, decision_layer
