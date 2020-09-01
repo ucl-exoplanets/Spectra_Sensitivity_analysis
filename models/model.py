@@ -9,7 +9,6 @@ from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger
 from .plotting import plot_compare_truth
 from .utils import project_back
 from .architecture import CNN_model, LSTM_model, MLP_model_hp
-from kerastuner.tuners import RandomSearch, BayesianOptimization
 
 
 class Network():
@@ -23,11 +22,10 @@ class Network():
                                     self.config['training']['useMLP'],
                                     self.config['training']['useLSTM']])
         if Available_model.sum() != 1:
-            print("Please select an architecture")
+            print("Please select only one architecture")
             sys.exit()
         Architectures = np.array([CNN_model, MLP_model_hp, LSTM_model])
         idx = np.argwhere(Available_model == True)[0][0]
-        print(np.argwhere(Available_model == True))
         build_model = Architectures[idx]
         sequence, param, decision_layer = build_model(
             param_length=self.param_length, spectrum_length=self.spectrum_length, config=self.config)
@@ -35,14 +33,12 @@ class Network():
         self.model = Model(inputs=sequence, outputs=decision_layer)
         self.model.compile(loss=self.config['training']['lossFn'],
                            optimizer=keras.optimizers.Adam(lr=0.001, decay=10**self.config['training']['decay']), metrics=['mse'])
-        # self.model.compile(loss=self.config['training']['lossFn'],
-        #                    optimizer=keras.optimizers.Adam(lr=hp.Choice('learning_rate', [1e-2, 1e-3, 1e-4]), decay=10**self.config['training']['decay']), metrics=['mse'])
         self.model.summary()
         return self.model
 
     def train_model(self, X_train, y_train, X_valid, y_valid, epochs=30, lr=0.001, batch_size=64, checkpoint_dir='./', cv_order=0):
         print('training begins')
-        # make sure no prior graph existss
+        # make sure no prior graph exists
         keras.backend.clear_session()
 
         # create log folder and checkpoint folder
@@ -52,7 +48,7 @@ class Network():
         # callbacks
         # initialise log file.
         csv_logger = CSVLogger(os.path.join(
-            checkpoint_dir, 'history/training_{}.log'.format(cv_order)))
+            checkpoint_dir, 'history/training_{}.csv'.format(cv_order)))
         # initialise model checkpoint
         model_cktpt = ModelCheckpoint(os.path.join(checkpoint_dir, f'ckt/checkpt_{cv_order}.h5'),
                                       monitor='val_loss',
@@ -61,17 +57,9 @@ class Network():
                                       verbose=0,
                                       period=1)
         callbacks = [model_cktpt, csv_logger]
-
         self.compile_model(lr)
-        # tuner=RandomSearch(
-        #     self.compile_model,
-        #     objective='val_loss',
-        #     max_trials=5,
-        #     executions_per_trial=3,
-        #     directory='hp_test3',
-        #     project_name='hpactual_mlp')
-        # tuner.search_space_summary()
-        # display the network
+
+        # display network
         if self.config['general']['displayNet']:
             plot_model(self.model, to_file=os.path.join(
                 checkpoint_dir, 'model.png'), show_shapes=True)
@@ -81,7 +69,6 @@ class Network():
             X_train[0] = X_train[0].reshape(-1, self.spectrum_length, 1)
             X_valid[0] = X_valid[0].reshape(-1, self.spectrum_length, 1)
         else:
-
             X_train = X_train.reshape(-1, self.spectrum_length, 1)
             X_valid = X_valid.reshape(-1, self.spectrum_length, 1)
 
@@ -93,10 +80,7 @@ class Network():
                        validation_data=(X_valid, y_valid),
                        shuffle=True,
                        callbacks=callbacks)
-        # tuner.search(X_train, y_train,
-        #              epochs=50,
-        #              validation_data=(X_valid, y_valid))
-        # tuner.results_summary()
+
         score = self.model.evaluate(X_valid, y_valid, verbose=0)
         return None
 
