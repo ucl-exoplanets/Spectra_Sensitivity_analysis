@@ -94,8 +94,10 @@ def run_DNN(config_path, epochs, lr, batch_size,):
                             batch_size=batch_size,
                             checkpoint_dir=checkpoint_dir,
                             cv_order=cv)
+        else:
+            DNN.load_model(checkpoint_dir+"ckt/checkpt_0.h5")
 
-        # Produce PVT Plot
+        # Produce various model diagnostics
         DNN.produce_result(std_x_test, std_y_test, param_mean,
                            param_std, checkpoint_dir, order=cv)
 

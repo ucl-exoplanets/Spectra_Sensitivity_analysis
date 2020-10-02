@@ -72,10 +72,10 @@ def get_equal_bin(truth, pred, batch_size):
     sorted_y_org, sorted_y_pred = truth[sorted_idx], pred[sorted_idx]
 
     num_batches = len(sorted_y_org)//batch_size
-    binned_y = np.zeros((batches))
-    binned_yerr = np.zeros((batches))
-    binned_x = np.zeros((batches))
-    population = np.zeros((batches))
+    binned_y = np.zeros((num_batches))
+    binned_yerr = np.zeros((num_batches))
+    binned_x = np.zeros((num_batches))
+    population = np.zeros((num_batches))
     bin_edge = []
     for mb in range(num_batches):
 

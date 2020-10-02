@@ -113,12 +113,12 @@ def BVPlot(y_test_org, y_predict_org, checkpoint_dir, order=0, chosen_gas=None, 
         binned_x, binned_y, binned_yerr, _ = get_equal_bin(
             y_test_org[:, mol], y_predict_org[:, mol], batch_size)
 
-        if gas[mol] == 'R$_p$':
+        if gas[mol] == 'Rp':
             ax[mol].errorbar(x=binned_x/R_J, y=binned_y/R_J,
                              marker='o', yerr=binned_yerr/R_J, ls='-', color=color)
 
             ax[mol].set_ylabel('Average Deviation [R$_J$]', fontsize=15)
-        elif gas[mol] == 'M$_p$':
+        elif gas[mol] == 'Mp':
             binned_x, binned_y, binned_yerr, _ = get_equal_bin(
                 10**y_test_org[:, mol], 10**y_predict_org[:, mol], batch_size)
 
@@ -131,7 +131,7 @@ def BVPlot(y_test_org, y_predict_org, checkpoint_dir, order=0, chosen_gas=None, 
             ax[mol].set_xticks([0.1, 1, 2, 3, 4])
             ax[mol].get_xaxis().set_major_formatter(ticker.ScalarFormatter())
 
-        elif gas[mol] == 'T$_p$':
+        elif gas[mol] == 'Tp':
             ax[mol].errorbar(x=binned_x, y=binned_y, marker='o',
                              yerr=binned_yerr, color=color, zorder=99, alpha=0.7)
             ax[mol].set_ylabel('Average Deviation [K]', fontsize=15)
@@ -152,7 +152,134 @@ def BVPlot(y_test_org, y_predict_org, checkpoint_dir, order=0, chosen_gas=None, 
                         hspace=0.25)
 
     plt.tight_layout()
-    fig.savefig(os.path.join(checkpoint_dir, f"BVPlot_{order}.pdf"))
+    fig.savefig(os.path.join(checkpoint_dir, f"results/BVPlot_{order}.pdf"))
+    plt.close()
+
+
+def pred_deviation_plot(y_test_org, y_predict_org, checkpoint_dir, order=0, chosen_gas=None, color='#6495ED'):
+    fig, axs = plt.subplots(nrows=3, ncols=3, sharex=False,
+                            sharey=False, figsize=(20, 14), squeeze=True)
+    axs = axs.flatten()
+    if chosen_gas is None:
+        gas = label
+    else:
+        gas = chosen_gas
+    for i in range(y_test_org.shape[1]):
+        y_pred = y_predict_org[:, i]
+        y_actual = y_test_org[:, i]
+
+        if gas[i] == 'Mp':
+            y_pred = y_pred - np.log10(M_J)
+            y_actual = y_actual - np.log10(M_J)
+            step = -0.3
+            width = 0.1
+        elif gas[i] == 'Rp':
+            y_pred = y_pred / R_J
+            y_actual = y_actual / R_J
+            step = -0.2
+            width = 0.03
+        elif gas[i] == 'Tp':
+            step = -300
+            width = 50
+        elif gas[i] == 'Cloud Top Pressure':
+            step = -0.3
+            width = 0.12
+        else:
+            step = -0.5
+            width = 0.5
+
+        abn_list = np.arange(y_actual.max(), y_actual.min(), step)
+
+        devi_list = np.zeros((len(abn_list)))
+        std_list = np.zeros((len(abn_list)))
+        bin_width = []
+        counts = np.zeros((len(abn_list)))
+        # TODO put into a function
+        for idx, abn in enumerate(abn_list):
+            selected = (y_pred < abn) & (y_pred > abn+step)
+            if selected.sum() < 20:
+                devi_list[idx] = np.nan
+                std_list[idx] = np.nan
+                bin_width.append(step)
+                continue
+            pred = y_pred[selected]
+            actual = y_actual[selected]
+            counts[idx] = len(pred)
+            L1 = np.abs(pred - actual)
+            L1_mean = np.mean(L1)
+            L1_std = 1.96*np.std(L1)/np.sqrt(len(pred))
+            devi_list[idx] = L1_mean
+            std_list[idx] = L1_std
+            bin_width.append(step)
+
+        x_bins = abn_list+step/2
+        devi_list[np.isnan(devi_list)] = 0
+
+        axs[i].bar(x_bins, devi_list, width=bin_width,
+                   yerr=std_list, color=color, edgecolor='black')
+        axs[i].set_title(f"{label[i]}", fontsize=18)
+        ax2 = axs[i].twinx()
+        ax2.plot(x_bins, counts, color='black', alpha=0.6, ls='-')
+        ax2.scatter(x_bins, counts, color='black', alpha=0.6, marker='x')
+        ax2.set_ylim(bottom=0, top=1300)
+        ax2.set_ylabel("Frequency", fontsize=14)
+
+        axs[i].set_ylabel("Average Deviation", fontsize=14)
+        axs[i].set_xlabel(f"Predicted {units[i]}", fontsize=14)
+
+    plt.subplots_adjust(left=0.125,
+                        right=0.9,
+                        bottom=0.1,
+                        top=0.9,
+                        wspace=0.2,
+                        hspace=0.35)
+    plt.tight_layout()
+    fig.savefig(os.path.join(checkpoint_dir, f"results/deviation_{order}.pdf"))
+    plt.close()
+
+
+def credibility_plot(y_test_org, y_predict_org, checkpoint_dir, order=0, eps=0.5, delta=0.7, color='#FF6347'):
+    eps = 0.5
+    delta = 0.7
+
+    fig, axs = plt.subplots(nrows=5, ncols=1, sharex=False,
+                            sharey=True, figsize=(8, 12), squeeze=True)
+    axs = axs.flatten()
+    for i in range(5):
+
+        y_pred = y_predict_org[:, i]
+        y_actual = y_test_org[:, i]
+        step = -0.4
+        width = 0.4
+
+        abn_list = np.arange(y_actual.max(), y_actual.min(), step)
+        probability_list = np.zeros((len(abn_list)))
+
+        for idx, abn in enumerate(abn_list):
+            selected = (y_pred < abn) & (y_pred > abn+step)
+            if selected.sum() < 20:
+                continue
+            pred = y_pred[selected]
+            actual = y_actual[selected]
+            # Credibility calculation
+            difference = np.abs(pred - actual)
+            items = difference < eps
+            total_pred_num = len(pred)
+            P = items.sum()/total_pred_num
+            probability_list[idx] = P
+        x_bins = abn_list+step/2
+        axs[i].bar(x_bins, probability_list, width=width,
+                   color=color, edgecolor='black')
+        axs[i].set_title(f"{label[i]}", fontsize=18)
+        axs[i].set_ylim(bottom=0, top=1)
+        axs[i].set_ylabel("Probability", fontsize=14)
+        if i == 4:
+            axs[i].set_xlabel(f"Predicted Abundance level", fontsize=14)
+        axs[i].axhline(delta, color="#778899", lw=3, ls='--')
+
+    plt.tight_layout()
+    fig.savefig(os.path.join(checkpoint_dir, f"results/cred_plot_{order}.pdf"))
+    plt.close()
 
 
 def plot_sensitivity(wl, spectrum, mean_std, checkpoint_dir, order=0,

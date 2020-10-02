@@ -6,7 +6,7 @@ from tensorflow import keras
 from tensorflow.keras.models import load_model, Model
 from tensorflow.keras.utils import plot_model
 from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger
-from .plotting import plot_compare_truth
+from .plotting import plot_compare_truth, BVPlot, pred_deviation_plot, credibility_plot
 from .utils import project_back
 from .architecture import CNN_model, LSTM_model, MLP_model_hp
 
@@ -110,3 +110,17 @@ class Network():
                            order=order,
                            scale=None,
                            chosen_gas=None, alpha=0.4)
+        BVPlot(y_test_org=y_test_org,
+               y_predict_org=y_predict_org,
+               checkpoint_dir=checkpoint_dir,
+               order=order,
+               chosen_gas=None)
+        pred_deviation_plot(y_test_org=y_test_org,
+                            y_predict_org=y_predict_org,
+                            checkpoint_dir=checkpoint_dir,
+                            order=order,
+                            chosen_gas=None)
+        credibility_plot(y_test_org=y_test_org,
+                         y_predict_org=y_predict_org,
+                         checkpoint_dir=checkpoint_dir,
+                         order=order)
