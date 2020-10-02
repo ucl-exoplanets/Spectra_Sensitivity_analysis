@@ -1,10 +1,12 @@
 from matplotlib import cm
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 import os
 import pandas as pd
 import glob
 from .constants import M_J, R_J, label, units
+from .ops import get_equal_bin
 
 
 def plot_compare_truth(y_test_org, y_predict_org, checkpoint_dir, order=0,
@@ -94,8 +96,63 @@ def plot_compare_truth(y_test_org, y_predict_org, checkpoint_dir, order=0,
         plt.title(f"{gas[i]}")
         plt.ylabel(f'Predicted {units[i]}')
         plt.xlabel(f'True {units[i]}')
-    plt.savefig(os.path.join(checkpoint_dir, f"results/compare_truth_{order}"))
+    plt.savefig(os.path.join(checkpoint_dir,
+                             f"results/compare_truth_{order}.pdf"))
     plt.close()
+
+
+def BVPlot(y_test_org, y_predict_org, checkpoint_dir, order=0, chosen_gas=None, color='#1E90FF', batch_size=100):
+    fig, ax = plt.subplots(nrows=3, ncols=3, figsize=(20, 16))
+    ax = ax.flatten()
+    if chosen_gas is None:
+        gas = label
+    else:
+        gas = chosen_gas
+
+    for mol in range(y_test_org.shape[1]):
+        binned_x, binned_y, binned_yerr, _ = get_equal_bin(
+            y_test_org[:, mol], y_predict_org[:, mol], batch_size)
+
+        if gas[mol] == 'R$_p$':
+            ax[mol].errorbar(x=binned_x/R_J, y=binned_y/R_J,
+                             marker='o', yerr=binned_yerr/R_J, ls='-', color=color)
+
+            ax[mol].set_ylabel('Average Deviation [R$_J$]', fontsize=15)
+        elif gas[mol] == 'M$_p$':
+            binned_x, binned_y, binned_yerr, _ = get_equal_bin(
+                10**y_test_org[:, mol], 10**y_predict_org[:, mol], batch_size)
+
+            ax[mol].errorbar(x=binned_x/M_J, y=binned_y/M_J,
+                             marker='o', yerr=binned_yerr/M_J, ls='-', color=color)
+
+            ax[mol].set_xscale('log')
+            ax[mol].set_ylabel('Average Deviation [M$_J$]', fontsize=15)
+            ax[mol].set_ylim(ymin=0, ymax=3.5)
+            ax[mol].set_xticks([0.1, 1, 2, 3, 4])
+            ax[mol].get_xaxis().set_major_formatter(ticker.ScalarFormatter())
+
+        elif gas[mol] == 'T$_p$':
+            ax[mol].errorbar(x=binned_x, y=binned_y, marker='o',
+                             yerr=binned_yerr, color=color, zorder=99, alpha=0.7)
+            ax[mol].set_ylabel('Average Deviation [K]', fontsize=15)
+
+        else:
+            ax[mol].errorbar(x=binned_x, y=binned_y, marker='o',
+                             yerr=binned_yerr, color=color, zorder=99, alpha=0.7)
+            ax[mol].set_ylabel('Average Deviation', fontsize=15)
+
+        ax[mol].set_xlabel(f"True {units[mol]}", fontsize=15)
+        ax[mol].set_title(f"{gas[mol]}", fontsize=20)
+
+    plt.subplots_adjust(left=0.125,
+                        right=0.9,
+                        bottom=0.1,
+                        top=0.9,
+                        wspace=0.35,
+                        hspace=0.25)
+
+    plt.tight_layout()
+    fig.savefig(os.path.join(checkpoint_dir, f"BVPlot_{order}.pdf"))
 
 
 def plot_sensitivity(wl, spectrum, mean_std, checkpoint_dir, order=0,

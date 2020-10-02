@@ -66,6 +66,35 @@ def pre_select(gas, ground_truth, org_spectrum, abundance):
     return selected_x
 
 
+def get_equal_bin(truth, pred, batch_size):
+    # sort array according to ground truth
+    sorted_idx = np.argsort(truth)[::-1]
+    sorted_y_org, sorted_y_pred = truth[sorted_idx], pred[sorted_idx]
+
+    num_batches = len(sorted_y_org)//batch_size
+    binned_y = np.zeros((batches))
+    binned_yerr = np.zeros((batches))
+    binned_x = np.zeros((batches))
+    population = np.zeros((batches))
+    bin_edge = []
+    for mb in range(num_batches):
+
+        pred_bin = sorted_y_pred[mb*batch_size:(mb+1)*batch_size]
+        true_bin = sorted_y_org[mb*batch_size:(mb+1)*batch_size]
+        one_bin_edge = [true_bin.min(), true_bin.max()]
+        pop = np.sum((sorted_y_pred > true_bin.min()) &
+                     (sorted_y_pred < true_bin.max()))
+        population[mb] = pop
+        diff = np.abs(true_bin - pred_bin)
+        mean_predict = diff.mean()
+        std_predict = diff.std()
+        binned_y[mb] = mean_predict
+        binned_yerr[mb] = std_predict
+        binned_x[mb] = true_bin.mean()
+        bin_edge.append(one_bin_edge)
+    return binned_x, binned_y, binned_yerr, population
+
+
 def load_history(checkpoint_dir):
     training_log = glob.glob(checkpoint_dir + "history/*.log")
     # TODO return none when list is empty
