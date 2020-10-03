@@ -6,22 +6,24 @@ from .utils import standardise, normalise_spectrum, normalise
 from sklearn.preprocessing import QuantileTransformer
 
 
-def preprocessing(spectrum_file, param_file, Rs=False):
+def preprocessing(spectrum_file, param_file, Rs=False, size=-1):
+    """Preprocessing for ARIEL data, if you are using other dataset you may want to construct your own preprocessing"""
     # Only the first 10 items are trainable.
-    trainable_param = param_file.values[:, :9]
+    trainable_param = param_file.values[:size, :9]
     # turn into logarithm.
     trainable_param[:, :6] = np.log10(trainable_param[:, :6])
     trainable_param[:, -1] = np.log10(trainable_param[:, -1])
     # separate into spectrum, error and wl
-    spectrum = spectrum_file[:, 0, :]
-    error = spectrum_file[:, 1, :]
+    spectrum = spectrum_file[:size, 0, :]
+    error = spectrum_file[:size, 1, :]
     wl = spectrum_file[0, 2, :]
+    print(spectrum.shape)
     if Rs:
-        Rstar = param_file.values[:, 9]
+        Rstar = param_file.values[:size, 9]
         return spectrum, error, wl, trainable_param, Rstar
     else:
 
-        return spectrum, error, wl, trainable_param
+        return spectrum, error, wl, trainable_param, None
 
 
 def compute_MSE(y_true, y_pred, gas_label=None):
@@ -96,7 +98,7 @@ def get_equal_bin(truth, pred, batch_size):
 
 
 def load_history(checkpoint_dir):
-    training_log = glob.glob(checkpoint_dir + "history/*.log")
+    training_log = glob.glob(checkpoint_dir + "history/*.csv")
     # TODO return none when list is empty
     history_data = pd.read_csv(training_log[0])
     epoch = len(history_data['loss'])

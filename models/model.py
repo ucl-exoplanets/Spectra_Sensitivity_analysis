@@ -8,7 +8,7 @@ from tensorflow.keras.utils import plot_model
 from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger
 from .plotting import plot_compare_truth, BVPlot, pred_deviation_plot, credibility_plot
 from .utils import project_back
-from .architecture import CNN_model, LSTM_model, MLP_model_hp
+from .architecture import CNN_model, LSTM_model, MLP_model
 
 
 class Network():
@@ -24,7 +24,7 @@ class Network():
         if Available_model.sum() != 1:
             print("Please select only one architecture")
             sys.exit()
-        Architectures = np.array([CNN_model, MLP_model_hp, LSTM_model])
+        Architectures = np.array([CNN_model, MLP_model, LSTM_model])
         idx = np.argwhere(Available_model == True)[0][0]
         build_model = Architectures[idx]
         sequence, param, decision_layer = build_model(

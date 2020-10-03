@@ -45,7 +45,7 @@ def plot_compare_truth(y_test_org, y_predict_org, checkpoint_dir, order=0,
         else:
             scale = abs(sort_ydata - sort_ypredict)
 
-        if gas[i] in ['H2O', 'CH4', 'CO', 'CO2', 'NH3']:
+        if gas[i] in ['H$_2$O', 'CH$_4$', 'CO', 'CO$_2$', 'NH$_3$']:
             plt.scatter(x=sort_ydata, y=sort_ypredict, c=scale, marker='v', label="Predicted Abundance",
                         s=20, alpha=alpha, zorder=1)
             plt.plot([sort_ydata.min(), sort_ydata.max()], [sort_ydata.min(), sort_ydata.max()], zorder=99, lw=3,
@@ -53,7 +53,7 @@ def plot_compare_truth(y_test_org, y_predict_org, checkpoint_dir, order=0,
 
             plt.ylim([sort_ydata.min() * 1.01, sort_ydata.max() * 0.95])
             plt.xlim([sort_ydata.min() * 1.01, sort_ydata.max() * 0.95])
-        elif gas[i] == 'Mp':
+        elif gas[i] == 'M$_p$':
             ydata_jpmass = (10 ** sort_ydata) / M_J
             ypredict_jpmass = (10 ** sort_ypredict) / M_J
             plt.scatter(x=ydata_jpmass, y=ypredict_jpmass, c=scale, marker='v',
@@ -66,7 +66,7 @@ def plot_compare_truth(y_test_org, y_predict_org, checkpoint_dir, order=0,
             plt.xscale('log')
             plt.yscale('log')
 
-        elif gas[i] == 'Rp':
+        elif gas[i] == "R$_p$":
             ydata_in_Jr = sort_ydata / R_J
             ypredict_in_Jr = sort_ypredict / R_J
             plt.scatter(x=ydata_in_Jr, y=ypredict_in_Jr, c=scale, marker='v', label="Predicted Abundance",
@@ -76,7 +76,7 @@ def plot_compare_truth(y_test_org, y_predict_org, checkpoint_dir, order=0,
             plt.ylim([ydata_in_Jr.min() * 0.95, ydata_in_Jr.max() * 1.01])
             plt.xlim([ydata_in_Jr.min() * 0.95, ydata_in_Jr.max() * 1.01])
 
-        elif gas[i] == 'Tp':
+        elif gas[i] == "T$_p$":
             plt.scatter(x=sort_ydata, y=sort_ypredict, c=scale, marker='v', label="Predicted Abundance", s=20,
                         alpha=alpha, zorder=1)
             plt.plot([sort_ydata.min(), sort_ydata.max()], [sort_ydata.min(), sort_ydata.max()], zorder=99, lw=3,
@@ -113,12 +113,12 @@ def BVPlot(y_test_org, y_predict_org, checkpoint_dir, order=0, chosen_gas=None, 
         binned_x, binned_y, binned_yerr, _ = get_equal_bin(
             y_test_org[:, mol], y_predict_org[:, mol], batch_size)
 
-        if gas[mol] == 'Rp':
+        if gas[mol] == 'R$_p$':
             ax[mol].errorbar(x=binned_x/R_J, y=binned_y/R_J,
                              marker='o', yerr=binned_yerr/R_J, ls='-', color=color)
 
             ax[mol].set_ylabel('Average Deviation [R$_J$]', fontsize=15)
-        elif gas[mol] == 'Mp':
+        elif gas[mol] == 'M$_p$':
             binned_x, binned_y, binned_yerr, _ = get_equal_bin(
                 10**y_test_org[:, mol], 10**y_predict_org[:, mol], batch_size)
 
@@ -131,7 +131,7 @@ def BVPlot(y_test_org, y_predict_org, checkpoint_dir, order=0, chosen_gas=None, 
             ax[mol].set_xticks([0.1, 1, 2, 3, 4])
             ax[mol].get_xaxis().set_major_formatter(ticker.ScalarFormatter())
 
-        elif gas[mol] == 'Tp':
+        elif gas[mol] == "T$_p$":
             ax[mol].errorbar(x=binned_x, y=binned_y, marker='o',
                              yerr=binned_yerr, color=color, zorder=99, alpha=0.7)
             ax[mol].set_ylabel('Average Deviation [K]', fontsize=15)
@@ -168,17 +168,17 @@ def pred_deviation_plot(y_test_org, y_predict_org, checkpoint_dir, order=0, chos
         y_pred = y_predict_org[:, i]
         y_actual = y_test_org[:, i]
 
-        if gas[i] == 'Mp':
+        if gas[i] == 'M$_p$':
             y_pred = y_pred - np.log10(M_J)
             y_actual = y_actual - np.log10(M_J)
             step = -0.3
             width = 0.1
-        elif gas[i] == 'Rp':
+        elif gas[i] == 'R$_p$':
             y_pred = y_pred / R_J
             y_actual = y_actual / R_J
             step = -0.2
             width = 0.03
-        elif gas[i] == 'Tp':
+        elif gas[i] == 'T$_p$':
             step = -300
             width = 50
         elif gas[i] == 'Cloud Top Pressure':
@@ -285,16 +285,16 @@ def credibility_plot(y_test_org, y_predict_org, checkpoint_dir, order=0, eps=0.5
 def plot_sensitivity(wl, spectrum, mean_std, checkpoint_dir, order=0,
                      gases=None, name='sensi_map'):
     gas_contri = np.load("./data/all_gas_contri.npy")
-    gas_id = {'H2O': 0, 'CH4': 1, 'CO': 2, 'CO2': 3, 'NH3': 4}
+    gas_id = {'H$_2$O': 0, 'CH$_4$': 1, 'CO': 2, 'CO$_2$': 3, 'NH$_3$': 4}
     if gases is None:
         gases = label
     for idx, gas in enumerate(gases):
         plt.figure(figsize=(10, 8))
-        if gas in ['H2O', 'CH4', 'CO', 'CO2', 'NH3']:
+        if gas in ['H$_2$O', 'CH$_4$', 'CO', 'CO$_2$', 'NH$_3$']:
             ax1 = plt.subplot(2, 1, 1)
         else:
             ax1 = plt.subplot(1, 1, 1)
-        if gas == 'Rp':
+        if gas == 'R$_p$':
             mean_std[idx] = mean_std[idx]/R_J
         q = np.quantile(mean_std[idx], 0.9)
 
@@ -307,7 +307,7 @@ def plot_sensitivity(wl, spectrum, mean_std, checkpoint_dir, order=0,
         plt.colorbar(orientation='horizontal')
         plt.title(
             f'Average {name} for {gas} (Spectrum view)')
-        if gas in ['H2O', 'CH4', 'CO', 'CO2', 'NH3']:
+        if gas in ['H$_2$O', 'CH$_4$', 'CO', 'CO$_2$', 'NH$_3$']:
             ax2 = plt.subplot(2, 1, 2, sharex=ax1)
             plt.scatter(
                 wl, gas_contri[gas_id[gas]], marker='o', c=mean_std[idx], vmax=q)

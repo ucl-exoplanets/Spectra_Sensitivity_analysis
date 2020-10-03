@@ -10,7 +10,7 @@ from models.sensitivity import compute_sensitivty_org, compute_sensitivty_std
 from models.ops import shuffle_spectrum, load_history, compute_MSE, preprocessing, transform_spectrum
 
 
-def run_DNN(config_path, epochs, lr, batch_size,):
+def run_DNN(config_path, epochs, lr, batch_size, size):
 
     with open('config.yaml') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
@@ -29,8 +29,8 @@ def run_DNN(config_path, epochs, lr, batch_size,):
     f = h5py.File(checkpoint_dir+"result_file.hdf5", "w")
 
     # preprocessing
-    spectrum, error, wl, trainable_param = preprocessing(
-        spectrum_file, param_file, Rs=False)
+    spectrum, error, wl, trainable_param, Rstar = preprocessing(
+        spectrum_file, param_file, Rs=False, size=size)
 
     # train test split
     train_test_idx = get_random_idx(spectrum, portion=0.8, seed=seed)
@@ -94,13 +94,9 @@ def run_DNN(config_path, epochs, lr, batch_size,):
                             batch_size=batch_size,
                             checkpoint_dir=checkpoint_dir,
                             cv_order=cv)
-        else:
-            DNN.load_model(checkpoint_dir+"ckt/checkpt_0.h5")
-
-        # Produce various model diagnostics
-        DNN.produce_result(std_x_test, std_y_test, param_mean,
-                           param_std, checkpoint_dir, order=cv)
-
+        # else:
+        #     DNN.load_model(checkpoint_dir+"ckt/checkpt_0.h5")
+        current_model = DNN.load_model(checkpoint_dir+f'ckt/checkpt_{cv}.h5')
         std_y_pred = DNN.predict_result(std_x_test, std_y_test)
         if cv == 0:
             master_mse = compute_MSE(std_y_test, std_y_pred)
@@ -109,7 +105,6 @@ def run_DNN(config_path, epochs, lr, batch_size,):
             MSE_score = compute_MSE(std_y_test, std_y_pred)
             master_mse = master_mse.append(
                 MSE_score.iloc[0], ignore_index=True)
-        demo_model = model.load_model(checkpoint_dir+f'ckt/checkpt_{cv}.h5')
 
         # save results
         trial = f.create_group(f"trial_{cv}")
@@ -117,26 +112,31 @@ def run_DNN(config_path, epochs, lr, batch_size,):
         mean = trial.create_dataset(f"param_mean_{cv}", data=param_mean)
         std = trial.create_dataset(f"param_std_{cv}", data=param_std)
 
+        # Produce various model diagnostics
+        if config['general']['run_diagnostics']:
+            DNN.produce_result(std_x_test, std_y_test, param_mean,
+                               param_std, checkpoint_dir, order=cv)
         # Sensitivity analysis
-        sensitivity_MSE = compute_sensitivty_org(model=demo_model,
-                                                 ground_truth=y_test,
-                                                 org_spectrum=x_test,
-                                                 org_error=error_test,
-                                                 y_data_mean=param_mean,
-                                                 y_data_std=param_std,
-                                                 gases=None,
-                                                 no_spectra=300,
-                                                 repeat=1000,
-                                                 x_mean=spectrum_mean,
-                                                 x_std=spectrum_std,
-                                                 abundance=[-7, -3, ])
+        if config['general']['run_sensitivity']:
+            sensitivity_MSE = compute_sensitivty_org(model=current_model,
+                                                     ground_truth=y_test,
+                                                     org_spectrum=x_test,
+                                                     org_error=error_test,
+                                                     y_data_mean=param_mean,
+                                                     y_data_std=param_std,
+                                                     gases=None,
+                                                     no_spectra=300,
+                                                     repeat=1000,
+                                                     x_mean=spectrum_mean,
+                                                     x_std=spectrum_std,
+                                                     abundance=[-7, -3, ])
 
-        sensitivity_plot(spectrum=x_test[0],
-                         wl=wl,
-                         mean_MSE=sensitivity_MSE,
-                         checkpoint_dir=checkpoint_dir,
-                         fname='sensi_map')
-        np.save(checkpoint_dir+f"results/sensi_map_{cv}", sensitivity_MSE)
+            sensitivity_plot(spectrum=x_test[0],
+                             wl=wl,
+                             mean_MSE=sensitivity_MSE,
+                             checkpoint_dir=checkpoint_dir,
+                             fname='sensi_map')
+            np.save(checkpoint_dir+f"results/sensi_map_{cv}", sensitivity_MSE)
 
     master_mse = master_mse.append(master_mse.mean(axis=0), ignore_index=True)
     master_mse = master_mse.rename(index={cv+1: 'Average'})
