@@ -9,7 +9,7 @@ parser.add_argument('--batch_size', type=int, nargs='?', default=64,
                     help='batch size for the DNN')
 parser.add_argument('--lr', type=float, nargs='?', default=0.001,
                     help='initial learning rate for the DNN')
-parser.add_argument('--epochs', type=int, nargs='?', default=50,
+parser.add_argument('--epochs', type=int, nargs='?', default=20,
                     help='Number of training epochs')
 parser.add_argument('--size', type=int, nargs='?', default=-1,
                     help='training size, -1 for all data ')
