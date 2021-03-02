@@ -1,6 +1,4 @@
-# Interpreting deep learning models for exoplanet atmospheric retrievals
-_Work in Progress_
-
+# Peeking inside the Black Box: Interpreting Deep Learning Models for Exoplanet Atmospheric Retrievals
 
 ## Summary
 This is a code repository for the paper: Peeking inside the Black Box: Interpreting Deep Learning Models for Exoplanet Atmospheric Retrievals
@@ -8,6 +6,18 @@ Inside you will find detailed implementation of the 3 DNNs, and how to carry out
 
 ### List of authors
 _Kai Hou Yip, Quentin Changeat, Nikolaos Nikolaou, Mario Morvan, Billy Edwards, Ingo P. Waldmann, and Giovanna Tinetti_
+
+# Key Requirements
+- Keras (2.3.1)
+- Tensorflow (2.2.0)
+- h5py (2.10.0)
+- pandas (1.2.2)
+- matplotlib (3.3.4)
+- numpy (1.19.2)
+
+To replicate the exact computing environment, please install the `pip install` packages according to `requirements.txt`.
+## Installation
+
 
 ## How to use it
 There are two ways to use the code:
