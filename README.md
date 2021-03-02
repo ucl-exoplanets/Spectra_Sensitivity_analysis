@@ -1,7 +1,8 @@
 # Peeking inside the Black Box: Interpreting Deep Learning Models for Exoplanet Atmospheric Retrievals
 
 ## Summary
-This is a code repository for the paper: Peeking inside the Black Box: Interpreting Deep Learning Models for Exoplanet Atmospheric Retrievals
+This is a code repository for the paper: Peeking inside the Black Box: Interpreting Deep Learning Models for Exoplanet Atmospheric Retrievals[https://arxiv.org/abs/2011.11284]
+
 Inside you will find detailed implementation of the 3 DNNs, and how to carry out sensitivity test for the trained model. You can find the source data file here.
 
 ### List of authors
