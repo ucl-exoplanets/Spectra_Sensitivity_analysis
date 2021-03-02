@@ -22,7 +22,7 @@ class Network():
                                     self.config['training']['useMLP'],
                                     self.config['training']['useLSTM']])
         if Available_model.sum() != 1:
-            print("Please select only one architecture")
+            print("Please select exactly 1 architecture")
             sys.exit()
         Architectures = np.array([CNN_model, MLP_model, LSTM_model])
         idx = np.argwhere(Available_model == True)[0][0]

@@ -7,6 +7,9 @@ from .constants import R_J, label
 
 def compute_sensitivty_org(model, ground_truth, org_spectrum, org_error, y_data_mean, y_data_std, x_mean, x_std,
                            gases=None, no_spectra=200, repeat=100,  abundance=[-9, -3]):
+    '''
+    compute sensitivity map in original unit. The computed MSE will be in original unit squared. 
+    '''
 
     # checks
     np.random.seed(42)
@@ -57,7 +60,9 @@ def compute_sensitivty_org(model, ground_truth, org_spectrum, org_error, y_data_
 
 def compute_sensitivty_std(model, ground_truth, org_spectrum, org_error, x_mean, x_std,
                            gases=None, no_spectra=200, repeat=100,  abundance=[-4, -3],):
-
+    '''
+    compute sensitivity map in standardised unit. 
+    '''
     # checks
     np.random.seed(42)
     if gases is None:
