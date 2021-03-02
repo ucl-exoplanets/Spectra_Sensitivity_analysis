@@ -24,37 +24,32 @@ def compute_sensitivty_org(model, ground_truth, org_spectrum, org_error, y_data_
             # produce ref prediction for a particular spectrum
             org_x = selected_x[i]
             error = org_error[i]
-            std_x = standardise(org_x, x_mean, x_std)
-            ref_y = model.predict(std_x.reshape(-1, spectrum_length, 1))
-            ref_y_org = project_back(ref_y, y_data_mean, y_data_std)[0]
+            ref_y_org = model_prediction(
+                model, org_x, x_mean, x_std, y_data_mean, y_data_std)
             ref_value = ref_y_org[idx]
             # shuffle given spectrum at different bins and scales.
-            for k in range(repeat):
+            for n in range(repeat):
                 random_idx = random_index(org_x)
                 curr = 0
-                selected_bins = spectrum_length
+                k = spectrum_length
                 # current implementation will go from x/2 -> x/4 -> x/8 ... until length <=2
-                while selected_bins >= 2:
+                while k >= 2:
                     shuffle_x = org_x.copy()
-                    new_selected = int(np.ceil(selected_bins/2))
+                    new_selected = int(np.ceil(k/2))
                     picked_index = random_idx[curr:curr+new_selected]
                     # assume uncertainty is Gaussian distributed
-                    shift_pt = np.random.normal(
-                        loc=shuffle_x[picked_index], scale=error[picked_index])
-                    shuffle_x[picked_index] = shift_pt
-                    shuffle_x_std = standardise(shuffle_x, x_mean, x_std)
-                    y_hat = model.predict(
-                        shuffle_x_std.reshape(-1, spectrum_length, 1))
-                    y_hat_org = project_back(
-                        y_hat, y_data_mean, y_data_std)[0]
+                    shuffle_x = gaussian_perturbation(
+                        shuffle_x, error, picked_index)
+                    y_hat_org = model_prediction(
+                        model, shuffle_x, x_mean, x_std, y_data_mean, y_data_std)
 
-                    SD_stack[idx, i, k, picked_index] = y_hat_org[idx]
+                    SD_stack[idx, i, n, picked_index] = y_hat_org[idx]
                     # update index
                     curr += new_selected
-                    selected_bins = new_selected
+                    k = new_selected
 
-            SD_stack[idx, i, :, :] = np.square(
-                SD_stack[idx, i, :, :] - ref_value)
+            SD_stack[idx, i, :, :] = compute_distance(
+                SD_stack[idx, i, :, :], ref_value)
 
     mean_MSE = np.mean(SD_stack, axis=(1, 2))
     return mean_MSE
@@ -110,3 +105,24 @@ def compute_sensitivty_std(model, ground_truth, org_spectrum, org_error, x_mean,
 
     mean_MSE = np.mean(SD_stack, axis=(1, 2))
     return mean_MSE
+
+
+def compute_distance(y, y_hat):
+    return np.square(y - y_hat)
+
+
+def gaussian_perturbation(x, error, picked_index):
+
+    # assume uncertainty is Gaussian distributed
+    shift_pt = np.random.normal(
+        loc=x[picked_index], scale=error[picked_index])
+    x[picked_index] = shift_pt
+    return x
+
+
+def model_prediction(model, org_x, x_mean, x_std, y_data_mean, y_data_std):
+    spectrum_length = len(org_x)
+    std_x = standardise(org_x, x_mean, x_std)
+    ref_y = model.predict(std_x.reshape(-1, spectrum_length, 1))
+    ref_y_org = project_back(ref_y, y_data_mean, y_data_std)[0]
+    return ref_y_org
