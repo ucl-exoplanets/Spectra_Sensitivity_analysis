@@ -3,11 +3,11 @@ import numpy as np
 import pandas as pd
 import h5py
 import os
-from models import model
-from models.utils import standardise, get_random_idx
-from models.plotting import sensitivity_plot, return_history
-from models.sensitivity import compute_sensitivty_org, compute_sensitivty_std
-from models.ops import shuffle_spectrum, load_history, compute_MSE, preprocessing, transform_spectrum
+from sensitivity_test import model
+from sensitivity_test.utils import standardise, get_random_idx
+from sensitivity_test.plotting import sensitivity_plot, return_history
+from sensitivity_test.sensitivity import compute_sensitivty_org, compute_sensitivty_std
+from sensitivity_test.ops import shuffle_spectrum, load_history, compute_MSE, preprocessing, transform_spectrum
 
 
 def run_DNN(config_path, epochs, lr, batch_size, size):
