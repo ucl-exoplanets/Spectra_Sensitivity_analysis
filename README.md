@@ -9,6 +9,7 @@ Inside you will find detailed implementation of the 3 DNNs, and how to carry out
 _Kai Hou Yip, Quentin Changeat, Nikolaos Nikolaou, Mario Morvan, Billy Edwards, Ingo P. Waldmann, and Giovanna Tinetti_
 
 # Key Requirements
+- Python (3.8.8)
 - Keras (2.3.1)
 - Tensorflow (2.2.0)
 - h5py (2.10.0)
@@ -81,5 +82,19 @@ The normalisation factors (mean , s.d. ) are needed in order to normalise the sh
 
 ## Citation
 If our tool has been useful to your research/work, please kindly cite us:
+@ARTICLE{2020arXiv201111284H,
+       author = {{Hou Yip}, Kai and {Changeat}, Quentin and {Nikolaou}, Nikolaos and {Morvan}, Mario and {Edwards}, Billy and {Waldmann}, Ingo P. and {Tinetti}, Giovanna},
+        title = "{Peeking inside the Black Box: Interpreting Deep Learning Models for Exoplanet Atmospheric Retrievals}",
+      journal = {arXiv e-prints},
+     keywords = {Astrophysics - Earth and Planetary Astrophysics, Astrophysics - Instrumentation and Methods for Astrophysics, Computer Science - Machine Learning},
+         year = 2020,
+        month = nov,
+          eid = {arXiv:2011.11284},
+        pages = {arXiv:2011.11284},
+archivePrefix = {arXiv},
+       eprint = {2011.11284},
+ primaryClass = {astro-ph.EP},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2020arXiv201111284H},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+}
 
-## License
