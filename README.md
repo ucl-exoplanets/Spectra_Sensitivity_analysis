@@ -19,7 +19,9 @@ _Kai Hou Yip, Quentin Changeat, Nikolaos Nikolaou, Mario Morvan, Billy Edwards, 
 
 To replicate the exact computing environment, please install the `pip install` packages according to `requirements.txt`.
 ## Installation
-
+1. Download the code using `git clone`, or as a `zip` file
+2. Install the package using `pip install . `
+3. To replicate the exact computing environment: `pip install -r requirements.txt`
 
 ## How to use it
 There are two ways to use the code:
