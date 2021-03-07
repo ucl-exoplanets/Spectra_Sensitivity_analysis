@@ -1,3 +1,7 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4587377.svg)](https://doi.org/10.5281/zenodo.4587377)
+
+
+
 # Peeking inside the Black Box: Interpreting Deep Learning Models for Exoplanet Atmospheric Retrievals
 
 ## Summary
