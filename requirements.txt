@@ -85,7 +85,7 @@ ptyprocess==0.6.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pydot==1.4.1
-Pygments==2.6.1
+Pygments==2.7.4
 pylightcurve==3.0.4
 pylint @ file:///opt/concourse/worker/volumes/live/6955ee35-f724-40f5-5ceb-b17f5fe22813/volume/pylint_1614365844747/work
 pyodbc==4.0.30
