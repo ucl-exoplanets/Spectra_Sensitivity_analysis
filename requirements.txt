@@ -55,7 +55,7 @@ Markdown==3.2.2
 MarkupSafe==1.1.1
 matplotlib @ file:///opt/concourse/worker/volumes/live/41e8cd50-031f-4dda-5787-dd3c4f4e0f08/volume/matplotlib-suite_1613407855571/work
 mccabe==0.6.1
-mistune==0.8.4
+mistune==2.0.3
 mkl-fft==1.3.0
 mkl-random==1.1.1
 mkl-service==2.3.0
