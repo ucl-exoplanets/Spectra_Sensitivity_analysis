@@ -79,7 +79,7 @@ pickleshare==0.7.5
 Pillow @ file:///opt/concourse/worker/volumes/live/705be880-f90c-4fb3-489d-9ee685c52cbe/volume/pillow_1609786792428/work
 prometheus-client==0.8.0
 prompt-toolkit==3.0.5
-protobuf==3.12.2
+protobuf==3.18.3
 psycopg2==2.8.5
 ptyprocess==0.6.0
 pyasn1==0.4.8
