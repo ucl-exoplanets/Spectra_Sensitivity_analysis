@@ -37,7 +37,7 @@ ipywidgets==7.5.1
 isort @ file:///tmp/build/80754af9/isort_1612243941122/work
 jedi==0.17.0
 Jinja2==2.11.2
-joblib==0.15.1
+joblib==1.2.0
 jsonschema==3.2.0
 jupyter==1.0.0
 jupyter-client==6.1.3
